@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { hybridStorage } from '../utils/hybridStorage';
 import { getStorageInfo } from '../utils/storageType';
+import { testFirebaseConnection } from '../utils/firebaseApi';
 
 export const useDailyChecklist = () => {
   const [checkData, setCheckData] = useState({});
@@ -12,6 +13,7 @@ export const useDailyChecklist = () => {
   const [editMode, setEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [storageType, setStorageType] = useState('localStorage');
+  const [firebaseConnectionStatus, setFirebaseConnectionStatus] = useState(null);
 
   // 스토리지 타입 감지 및 데이터 로드
   useEffect(() => {
@@ -20,14 +22,23 @@ export const useDailyChecklist = () => {
         const storageInfo = getStorageInfo();
         setStorageType(storageInfo.type);
         
+        // Firebase 연결 테스트 (개발 환경에서만)
+        if (storageInfo.type === 'firebase' && import.meta.env.DEV) {
+          console.log('🔥 Firebase 연결 테스트 시작...');
+          const connectionTest = await testFirebaseConnection();
+          setFirebaseConnectionStatus(connectionTest);
+          console.log('🔥 Firebase 연결 테스트 결과:', connectionTest);
+        }
+        
         // 모든 체크리스트 데이터 로드
-        const allChecklists = await hybridStorage.getAllFocusCycles(); // 임시로 사용
+        const allChecklists = await hybridStorage.getAllDailyChecklists();
         
         // 날짜별로 그룹화
         const groupedData = {};
         allChecklists.forEach(checklist => {
           if (checklist.date) {
-            groupedData[checklist.date] = checklist;
+            // checklist.data에 실제 체크리스트 내용이 들어있음
+            groupedData[checklist.date] = checklist.data || {};
           }
         });
         
@@ -115,6 +126,7 @@ export const useDailyChecklist = () => {
     editMode,
     isLoading,
     storageType,
+    firebaseConnectionStatus,
     toggleSection,
     updateAnswer,
     toggleEditMode,
