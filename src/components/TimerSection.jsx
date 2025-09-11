@@ -35,7 +35,8 @@ export const TimerSection = ({ selectedDate }) => {
   const handleStartTimer = () => {
     if (currentTask.trim()) {
       setShowTaskInput(false);
-      setTimerStartTime(new Date()); // 타이머 시작 시간 저장
+      const now = new Date();
+      setTimerStartTime(now); // 타이머 시작 시간 저장
       startTimer();
     }
   };
@@ -66,12 +67,15 @@ export const TimerSection = ({ selectedDate }) => {
     const endTime = new Date();
     const startTime = timerStartTime || new Date(endTime.getTime() - (10 * 60 - timeLeft) * 1000);
 
+    // 정확한 소요 시간 계산 (실제 경과 시간 기반)
+    const actualTimeSpent = Math.max(0, 10 * 60 - timeLeft);
+
     const newCycle = {
       date: selectedDate,
       task: currentTask,
       startTime: startTime,
       endTime: endTime,
-      timeSpent: 10 * 60 - timeLeft,
+      timeSpent: actualTimeSpent,
       result: reflection.result,
       distractions: reflection.distractions,
       thoughts: reflection.thoughts
@@ -165,12 +169,7 @@ export const TimerSection = ({ selectedDate }) => {
           </div>
           <div className="flex gap-4 justify-center">
             <button
-              onClick={isRunning ? handlePauseTimer : () => {
-                if (!timerStartTime) {
-                  setTimerStartTime(new Date());
-                }
-                startTimer();
-              }}
+              onClick={isRunning ? handlePauseTimer : startTimer}
               className="bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2"
             >
               {isRunning ? <Pause size={20} /> : <Play size={20} />}
