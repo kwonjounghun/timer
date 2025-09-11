@@ -7,7 +7,8 @@ import {
   deleteFocusCycle as firebaseDeleteFocusCycle,
   saveDailyChecklist as firebaseSaveDailyChecklist,
   getDailyChecklistByDate as firebaseGetDailyChecklistByDate,
-  updateDailyChecklist as firebaseUpdateDailyChecklist
+  updateDailyChecklist as firebaseUpdateDailyChecklist,
+  getAllDailyChecklists as firebaseGetAllDailyChecklists
 } from './firebaseApi';
 
 // 로컬스토리지 키 상수
@@ -140,6 +141,14 @@ const localStorageApi = {
       return true;
     }
     return false;
+  },
+
+  // 모든 일일 체크리스트 조회
+  getAllDailyChecklists: async (limit = 100) => {
+    const checklists = localStorageUtils.getItem(STORAGE_KEYS.DAILY_CHECKLISTS) || [];
+    return checklists
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit);
   }
 };
 
@@ -222,6 +231,16 @@ export const hybridStorage = {
       return await firebaseUpdateDailyChecklist(checklistId, updateData);
     } else {
       return await localStorageApi.updateDailyChecklist(checklistId, updateData);
+    }
+  },
+
+  // 모든 일일 체크리스트 조회
+  getAllDailyChecklists: async (limit = 100) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      return await firebaseGetAllDailyChecklists(limit);
+    } else {
+      return await localStorageApi.getAllDailyChecklists(limit);
     }
   },
 
