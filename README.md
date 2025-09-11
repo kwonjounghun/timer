@@ -88,7 +88,12 @@ npm run preview
 
 ## GitHub Pages 배포
 
-### 1. GitHub Secrets 설정
+### 1. GitHub Pages 설정
+Repository Settings → Pages에서 다음 설정:
+- **Source**: GitHub Actions
+- **Branch**: gh-pages (자동 생성됨)
+
+### 2. GitHub Secrets 설정 (선택사항)
 Repository Settings → Secrets and variables → Actions에서 다음 환경변수 설정:
 
 ```
@@ -100,15 +105,21 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-### 2. 자동 배포
+### 3. 자동 배포
 - `main` 브랜치에 푸시하면 자동으로 GitHub Pages에 배포
 - Firebase 환경변수가 설정되어 있으면 Firebase 사용
 - 환경변수가 없으면 로컬스토리지 사용
 
-### 3. 배포 확인
+### 4. 배포 확인
 - GitHub Actions 탭에서 배포 상태 확인
 - 배포 완료 후 `https://[username].github.io/[repository-name]`에서 확인
 - 우측 하단 스토리지 인디케이터로 현재 사용 중인 스토리지 확인
+
+### 5. 문제 해결
+만약 배포 권한 오류가 발생하면:
+1. Repository Settings → Actions → General
+2. "Workflow permissions" → "Read and write permissions" 선택
+3. "Allow GitHub Actions to create and approve pull requests" 체크
 
 ## 개발자 도구
 
