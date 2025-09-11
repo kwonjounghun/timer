@@ -8,7 +8,7 @@ import { formatDate, formatTime as formatTimeFromUtils } from '../utils/dateUtil
 
 export const TimerSection = ({ selectedDate }) => {
   const { timeLeft, isRunning, startTimer, pauseTimer, resetTimer, formatTime } = useTimer();
-  const { playNotification } = useAudio();
+  const { playNotification, requestNotificationPermission, notificationPermission } = useAudio();
   const { 
     cyclesByDate, 
     expandedCycles, 
@@ -51,8 +51,8 @@ export const TimerSection = ({ selectedDate }) => {
   const handleTimerComplete = useCallback(() => {
     pauseTimer();
     setShowReflection(true);
-    playNotification();
-  }, [pauseTimer, playNotification]);
+    playNotification(currentTask || '작업');
+  }, [pauseTimer, playNotification, currentTask]);
 
   // 타이머 완료 감지
   useEffect(() => {
@@ -90,10 +90,42 @@ export const TimerSection = ({ selectedDate }) => {
 
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
-      <h1 className="text-3xl font-bold text-center mb-8 text-gray-800 flex items-center justify-center gap-3">
-        <Clock className="text-blue-500" />
-        10분 집중 타이머
-      </h1>
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-4 text-gray-800 flex items-center justify-center gap-3">
+          <Clock className="text-blue-500" />
+          10분 집중 타이머
+        </h1>
+        
+        {/* 알림 권한 상태 및 요청 버튼 */}
+        {notificationPermission !== 'granted' && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-yellow-700 text-sm">
+                {notificationPermission === 'denied' 
+                  ? '🔕 알림이 차단되었습니다. 브라우저 설정에서 허용해주세요.'
+                  : '🔔 타이머 완료 시 알림을 받으려면 권한을 허용해주세요.'
+                }
+              </span>
+              {notificationPermission !== 'denied' && (
+                <button
+                  onClick={requestNotificationPermission}
+                  className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition-colors"
+                >
+                  알림 허용
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {notificationPermission === 'granted' && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-4">
+            <span className="text-green-700 text-sm flex items-center justify-center gap-2">
+              🔔 알림이 활성화되었습니다
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Task Input */}
       {showTaskInput && (
