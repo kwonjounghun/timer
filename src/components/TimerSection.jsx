@@ -5,22 +5,23 @@ import { useAudio } from '../hooks/useAudio';
 import { useFocusCycles } from '../hooks/useFocusCycles';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { formatDate, formatTime as formatTimeFromUtils } from '../utils/dateUtils';
+import { getStorageInfo } from '../utils/storageType';
 
 export const TimerSection = ({ selectedDate }) => {
   const { timeLeft, isRunning, startTimer, pauseTimer, resetTimer, formatTime } = useTimer();
   const { playNotification, requestNotificationPermission, notificationPermission } = useAudio();
-  const { 
-    cyclesByDate, 
-    expandedCycles, 
-    editingCycle, 
-    addCycle, 
-    editCycle, 
-    saveEdit, 
-    deleteCycle, 
-    toggleExpand, 
-    setEditingCycle 
+  const {
+    cyclesByDate,
+    expandedCycles,
+    editingCycle,
+    addCycle,
+    editCycle,
+    saveEdit,
+    deleteCycle,
+    toggleExpand,
+    setEditingCycle
   } = useFocusCycles();
-  
+
   const [currentTask, setCurrentTask] = useState('');
   const [showTaskInput, setShowTaskInput] = useState(true);
   const [showReflection, setShowReflection] = useState(false);
@@ -64,7 +65,7 @@ export const TimerSection = ({ selectedDate }) => {
   const saveReflection = () => {
     const endTime = new Date();
     const startTime = timerStartTime || new Date(endTime.getTime() - (10 * 60 - timeLeft) * 1000);
-    
+
     const newCycle = {
       date: selectedDate,
       task: currentTask,
@@ -75,12 +76,12 @@ export const TimerSection = ({ selectedDate }) => {
       distractions: reflection.distractions,
       thoughts: reflection.thoughts
     };
-    
+
     addCycle(newCycle);
-    
+
     setShowReflection(false);
     setReflection({ result: '', distractions: '', thoughts: '' });
-    
+
     // 초기 상태로 리셋
     resetTimer();
     setShowTaskInput(true);
@@ -95,13 +96,13 @@ export const TimerSection = ({ selectedDate }) => {
           <Clock className="text-blue-500" />
           10분 집중 타이머
         </h1>
-        
+
         {/* 알림 권한 상태 및 요청 버튼 */}
         {notificationPermission !== 'granted' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
             <div className="flex items-center justify-center gap-3">
               <span className="text-yellow-700 text-sm">
-                {notificationPermission === 'denied' 
+                {notificationPermission === 'denied'
                   ? '🔕 알림이 차단되었습니다. 브라우저 설정에서 허용해주세요.'
                   : '🔔 타이머 완료 시 알림을 받으려면 권한을 허용해주세요.'
                 }
@@ -117,8 +118,8 @@ export const TimerSection = ({ selectedDate }) => {
             </div>
           </div>
         )}
-        
-        {notificationPermission === 'granted' && (
+
+        {notificationPermission === 'granted' && !getStorageInfo().isFirebase && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-4">
             <span className="text-green-700 text-sm flex items-center justify-center gap-2">
               🔔 알림이 활성화되었습니다
@@ -193,7 +194,7 @@ export const TimerSection = ({ selectedDate }) => {
             <BookOpen />
             10분 집중 시간이 끝났어요! 회고를 작성해주세요
           </h2>
-          
+
           {/* 작업 내용 표시 */}
           <div className="mb-6 p-4 bg-white rounded-lg border border-green-200">
             <div className="flex items-center gap-2 mb-2">
@@ -204,7 +205,7 @@ export const TimerSection = ({ selectedDate }) => {
               {currentTask || '작업 내용이 없습니다'}
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -212,39 +213,39 @@ export const TimerSection = ({ selectedDate }) => {
               </label>
               <textarea
                 value={reflection.result}
-                onChange={(e) => setReflection(prev => ({...prev, result: e.target.value}))}
+                onChange={(e) => setReflection(prev => ({ ...prev, result: e.target.value }))}
                 className="w-full p-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 resize-vertical max-h-[500px]"
                 rows={3}
                 placeholder={`작업을 통해 어떤 성과를 얻으셨나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)`}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 작업을 방해한 요소들
               </label>
               <textarea
                 value={reflection.distractions}
-                onChange={(e) => setReflection(prev => ({...prev, distractions: e.target.value}))}
+                onChange={(e) => setReflection(prev => ({ ...prev, distractions: e.target.value }))}
                 className="w-full p-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 resize-vertical max-h-[500px]"
                 rows={3}
                 placeholder={`작업 중에 어떤 것들이 집중을 방해했나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)`}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 이번 10분에 대한 전체적인 회고
               </label>
               <textarea
                 value={reflection.thoughts}
-                onChange={(e) => setReflection(prev => ({...prev, thoughts: e.target.value}))}
+                onChange={(e) => setReflection(prev => ({ ...prev, thoughts: e.target.value }))}
                 className="w-full p-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 resize-vertical max-h-[500px]"
                 rows={3}
                 placeholder={`작업에 대한 전체적인 생각은 어떠신가요? 다음에는 어떻게 개선할 수 있을까요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)`}
               />
             </div>
-            
+
             <button
               onClick={saveReflection}
               className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors"
@@ -259,9 +260,9 @@ export const TimerSection = ({ selectedDate }) => {
       {(() => {
         const currentDateCycles = cyclesByDate[selectedDate] || [];
         const sortedCycles = [...currentDateCycles].sort((a, b) => a.startTime - b.startTime);
-        
+
         if (sortedCycles.length === 0) return null;
-        
+
         return (
           <div className="mt-8 border-t border-gray-200 pt-8">
             <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
@@ -273,10 +274,10 @@ export const TimerSection = ({ selectedDate }) => {
                 const isExpanded = expandedCycles.has(cycle.id);
                 const startTime = formatTimeFromUtils(cycle.startTime);
                 const endTime = formatTimeFromUtils(cycle.endTime);
-                
+
                 return (
                   <div key={cycle.id} className="border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                    <div 
+                    <div
                       className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer flex items-center justify-between"
                       onClick={() => toggleExpand(cycle.id)}
                     >
@@ -344,7 +345,7 @@ export const TimerSection = ({ selectedDate }) => {
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </div>
                     </div>
-                    
+
                     {isExpanded && (
                       <div className="px-3 pb-3 border-t border-gray-100">
                         {editingCycle && editingCycle.id === cycle.id ? (
@@ -353,7 +354,7 @@ export const TimerSection = ({ selectedDate }) => {
                               <Edit size={18} />
                               집중 기록 수정
                             </h3>
-                            
+
                             <div className="space-y-4">
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -362,51 +363,51 @@ export const TimerSection = ({ selectedDate }) => {
                                 <input
                                   type="text"
                                   value={editingCycle.task}
-                                  onChange={(e) => setEditingCycle(prev => ({...prev, task: e.target.value}))}
+                                  onChange={(e) => setEditingCycle(prev => ({ ...prev, task: e.target.value }))}
                                   className="w-full p-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                                   placeholder="작업 내용을 입력해주세요"
                                 />
                               </div>
-                              
+
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                   이번 작업에서 이뤄낸 결과
                                 </label>
                                 <textarea
                                   value={editingCycle.result}
-                                  onChange={(e) => setEditingCycle(prev => ({...prev, result: e.target.value}))}
+                                  onChange={(e) => setEditingCycle(prev => ({ ...prev, result: e.target.value }))}
                                   className="w-full p-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-vertical max-h-[500px]"
                                   rows={3}
                                   placeholder="어떤 성과를 얻으셨나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)"
                                 />
                               </div>
-                              
+
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                   작업을 방해한 요소들
                                 </label>
                                 <textarea
                                   value={editingCycle.distractions}
-                                  onChange={(e) => setEditingCycle(prev => ({...prev, distractions: e.target.value}))}
+                                  onChange={(e) => setEditingCycle(prev => ({ ...prev, distractions: e.target.value }))}
                                   className="w-full p-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-vertical max-h-[500px]"
                                   rows={3}
                                   placeholder="어떤 것들이 집중을 방해했나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)"
                                 />
                               </div>
-                              
+
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                   이번 10분에 대한 전체적인 회고
                                 </label>
                                 <textarea
                                   value={editingCycle.thoughts}
-                                  onChange={(e) => setEditingCycle(prev => ({...prev, thoughts: e.target.value}))}
+                                  onChange={(e) => setEditingCycle(prev => ({ ...prev, thoughts: e.target.value }))}
                                   className="w-full p-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-vertical max-h-[500px]"
                                   rows={3}
                                   placeholder="어떤 생각이 드시나요? 다음에는 어떻게 개선할 수 있을까요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)"
                                 />
                               </div>
-                              
+
                               <div className="flex gap-2 pt-2">
                                 <button
                                   onClick={() => setEditingCycle(null)}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { hybridStorage } from '../utils/hybridStorage';
 import { getStorageInfo } from '../utils/storageType';
 import { testFirebaseConnection } from '../utils/firebaseApi';
@@ -15,13 +15,16 @@ export const useDailyChecklist = () => {
   const [storageType, setStorageType] = useState('localStorage');
   const [firebaseConnectionStatus, setFirebaseConnectionStatus] = useState(null);
 
+  // 디바운싱을 위한 ref
+  const saveTimeoutRef = useRef({});
+
   // 스토리지 타입 감지 및 데이터 로드
   useEffect(() => {
     const loadData = async () => {
       try {
         const storageInfo = getStorageInfo();
         setStorageType(storageInfo.type);
-        
+
         // Firebase 연결 테스트 (개발 환경에서만)
         if (storageInfo.type === 'firebase' && import.meta.env.DEV) {
           console.log('🔥 Firebase 연결 테스트 시작...');
@@ -29,10 +32,10 @@ export const useDailyChecklist = () => {
           setFirebaseConnectionStatus(connectionTest);
           console.log('🔥 Firebase 연결 테스트 결과:', connectionTest);
         }
-        
+
         // 모든 체크리스트 데이터 로드
         const allChecklists = await hybridStorage.getAllDailyChecklists();
-        
+
         // 날짜별로 그룹화
         const groupedData = {};
         allChecklists.forEach(checklist => {
@@ -41,7 +44,7 @@ export const useDailyChecklist = () => {
             groupedData[checklist.date] = checklist.data || {};
           }
         });
-        
+
         setCheckData(groupedData);
       } catch (error) {
         console.error('체크리스트 데이터 로드 실패:', error);
@@ -54,6 +57,16 @@ export const useDailyChecklist = () => {
     loadData();
   }, []);
 
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      // 모든 대기 중인 타이머 정리
+      Object.values(saveTimeoutRef.current).forEach(timeout => {
+        if (timeout) clearTimeout(timeout);
+      });
+    };
+  }, []);
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -61,39 +74,58 @@ export const useDailyChecklist = () => {
     }));
   };
 
-  const updateAnswer = useCallback(async (selectedDate, section, questionIndex, value) => {
+  // 디바운싱된 저장 함수
+  const debouncedSave = useCallback(async (selectedDate, newData) => {
     try {
-      const newData = {
-        ...checkData,
-        [selectedDate]: {
-          ...checkData[selectedDate],
-          [section]: {
-            ...checkData[selectedDate]?.[section],
-            [questionIndex]: value
-          }
-        }
-      };
-      
-      // 하이브리드 스토리지에 저장
       const checklistData = {
         date: selectedDate,
         data: newData[selectedDate]
       };
-      
+
       // 기존 체크리스트가 있는지 확인
       const existingChecklist = await hybridStorage.getDailyChecklistByDate(selectedDate);
-      
+
       if (existingChecklist) {
         await hybridStorage.updateDailyChecklist(existingChecklist.id, checklistData);
       } else {
         await hybridStorage.saveDailyChecklist(checklistData);
       }
-      
-      setCheckData(newData);
     } catch (error) {
-      console.error('체크리스트 업데이트 실패:', error);
+      console.error('체크리스트 저장 실패:', error);
     }
-  }, [checkData]);
+  }, []);
+
+  const updateAnswer = useCallback((selectedDate, section, questionIndex, value) => {
+    // 즉시 로컬 상태 업데이트 (UI 반영)
+    setCheckData(prevData => {
+      const newData = {
+        ...prevData,
+        [selectedDate]: {
+          ...prevData[selectedDate],
+          [section]: {
+            ...prevData[selectedDate]?.[section],
+            [questionIndex]: value
+          }
+        }
+      };
+
+      // 디바운싱된 저장 실행
+      const timeoutKey = `${selectedDate}-${section}-${questionIndex}`;
+
+      // 기존 타이머가 있다면 취소
+      if (saveTimeoutRef.current[timeoutKey]) {
+        clearTimeout(saveTimeoutRef.current[timeoutKey]);
+      }
+
+      // 500ms 후에 저장 실행
+      saveTimeoutRef.current[timeoutKey] = setTimeout(() => {
+        debouncedSave(selectedDate, newData);
+        delete saveTimeoutRef.current[timeoutKey];
+      }, 500);
+
+      return newData;
+    });
+  }, [debouncedSave]);
 
   const toggleEditMode = () => {
     setEditMode(true);
@@ -113,9 +145,9 @@ export const useDailyChecklist = () => {
   };
 
   const hasCheckDataForSelectedDate = (selectedDate) => {
-    return checkData[selectedDate] && 
-      Object.keys(checkData[selectedDate]).some(section => 
-        checkData[selectedDate][section] && 
+    return checkData[selectedDate] &&
+      Object.keys(checkData[selectedDate]).some(section =>
+        checkData[selectedDate][section] &&
         Object.values(checkData[selectedDate][section]).some(answer => answer && answer.trim())
       );
   };
