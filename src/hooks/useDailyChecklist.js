@@ -1,14 +1,47 @@
-import { useState } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useState, useEffect, useCallback } from 'react';
+import { hybridStorage } from '../utils/hybridStorage';
+import { getStorageInfo } from '../utils/storageType';
 
 export const useDailyChecklist = () => {
-  const [checkData, setCheckData] = useLocalStorage('dailyCheckData', {});
+  const [checkData, setCheckData] = useState({});
   const [expandedSections, setExpandedSections] = useState({
     morning: false,
     lunch: false,
     evening: false
   });
   const [editMode, setEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [storageType, setStorageType] = useState('localStorage');
+
+  // 스토리지 타입 감지 및 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const storageInfo = getStorageInfo();
+        setStorageType(storageInfo.type);
+        
+        // 모든 체크리스트 데이터 로드
+        const allChecklists = await hybridStorage.getAllFocusCycles(); // 임시로 사용
+        
+        // 날짜별로 그룹화
+        const groupedData = {};
+        allChecklists.forEach(checklist => {
+          if (checklist.date) {
+            groupedData[checklist.date] = checklist;
+          }
+        });
+        
+        setCheckData(groupedData);
+      } catch (error) {
+        console.error('체크리스트 데이터 로드 실패:', error);
+        setCheckData({});
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -17,19 +50,39 @@ export const useDailyChecklist = () => {
     }));
   };
 
-  const updateAnswer = (selectedDate, section, questionIndex, value) => {
-    const newData = {
-      ...checkData,
-      [selectedDate]: {
-        ...checkData[selectedDate],
-        [section]: {
-          ...checkData[selectedDate]?.[section],
-          [questionIndex]: value
+  const updateAnswer = useCallback(async (selectedDate, section, questionIndex, value) => {
+    try {
+      const newData = {
+        ...checkData,
+        [selectedDate]: {
+          ...checkData[selectedDate],
+          [section]: {
+            ...checkData[selectedDate]?.[section],
+            [questionIndex]: value
+          }
         }
+      };
+      
+      // 하이브리드 스토리지에 저장
+      const checklistData = {
+        date: selectedDate,
+        data: newData[selectedDate]
+      };
+      
+      // 기존 체크리스트가 있는지 확인
+      const existingChecklist = await hybridStorage.getDailyChecklistByDate(selectedDate);
+      
+      if (existingChecklist) {
+        await hybridStorage.updateDailyChecklist(existingChecklist.id, checklistData);
+      } else {
+        await hybridStorage.saveDailyChecklist(checklistData);
       }
-    };
-    setCheckData(newData);
-  };
+      
+      setCheckData(newData);
+    } catch (error) {
+      console.error('체크리스트 업데이트 실패:', error);
+    }
+  }, [checkData]);
 
   const toggleEditMode = () => {
     setEditMode(true);
@@ -60,6 +113,8 @@ export const useDailyChecklist = () => {
     checkData,
     expandedSections,
     editMode,
+    isLoading,
+    storageType,
     toggleSection,
     updateAnswer,
     toggleEditMode,

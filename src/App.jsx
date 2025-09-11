@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DateNavigation } from './components/DateNavigation';
 import { DailyChecklist } from './components/DailyChecklist';
 import { TimerSection } from './components/TimerSection';
+import StorageIndicator from './components/StorageIndicator';
 import { useFocusCycles } from './hooks/useFocusCycles';
 import { getTodayString } from './utils/dateUtils';
 
@@ -19,6 +20,7 @@ const FocusTimer = () => {
     setIsDailySystemExpanded(!isDailySystemExpanded);
   };
 
+
   // 선택된 날짜의 사이클들 가져오기
   const currentDateCycles = cyclesByDate[selectedDate] || [];
   
@@ -35,6 +37,7 @@ const FocusTimer = () => {
         onClearAllData={clearAllData}
       />
 
+
       {/* 메인 컨텐츠 - 좌우 레이아웃 */}
       <div className="max-w-7xl mx-auto p-6">
         <div className={`grid grid-cols-1 gap-6 ${isDailySystemExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-1 lg:max-w-4xl lg:mx-auto'}`}>
@@ -50,6 +53,9 @@ const FocusTimer = () => {
           <TimerSection selectedDate={selectedDate} />
         </div>
       </div>
+
+      {/* 스토리지 타입 인디케이터 */}
+      <StorageIndicator />
     </div>
   );
 };
