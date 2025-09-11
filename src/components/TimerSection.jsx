@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Square, Clock, Target, BookOpen, ChevronDown, ChevronUp, Edit, AlertCircle } from 'lucide-react';
 import { useTimer } from '../hooks/useTimer';
 import { useAudio } from '../hooks/useAudio';
@@ -7,7 +7,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { formatDate, formatTime as formatTimeFromUtils } from '../utils/dateUtils';
 
 export const TimerSection = ({ selectedDate }) => {
-  const { timeLeft, isRunning, startTimer, pauseTimer, resetTimer, formatTime, setTimeLeft } = useTimer();
+  const { timeLeft, isRunning, startTimer, pauseTimer, resetTimer, formatTime } = useTimer();
   const { playNotification } = useAudio();
   const { 
     cyclesByDate, 
@@ -29,10 +29,12 @@ export const TimerSection = ({ selectedDate }) => {
     distractions: '',
     thoughts: ''
   });
+  const [timerStartTime, setTimerStartTime] = useState(null);
 
   const handleStartTimer = () => {
     if (currentTask.trim()) {
       setShowTaskInput(false);
+      setTimerStartTime(new Date()); // 타이머 시작 시간 저장
       startTimer();
     }
   };
@@ -46,22 +48,22 @@ export const TimerSection = ({ selectedDate }) => {
     setShowReflection(true);
   };
 
-  const handleTimerComplete = () => {
+  const handleTimerComplete = useCallback(() => {
     pauseTimer();
     setShowReflection(true);
     playNotification();
-  };
+  }, [pauseTimer, playNotification]);
 
   // 타이머 완료 감지
   useEffect(() => {
     if (timeLeft === 0 && isRunning) {
       handleTimerComplete();
     }
-  }, [timeLeft, isRunning]);
+  }, [timeLeft, isRunning, handleTimerComplete]);
 
   const saveReflection = () => {
     const endTime = new Date();
-    const startTime = new Date(endTime.getTime() - (10 * 60 - timeLeft) * 1000);
+    const startTime = timerStartTime || new Date(endTime.getTime() - (10 * 60 - timeLeft) * 1000);
     
     const newCycle = {
       date: selectedDate,
@@ -83,6 +85,7 @@ export const TimerSection = ({ selectedDate }) => {
     resetTimer();
     setShowTaskInput(true);
     setCurrentTask('');
+    setTimerStartTime(null); // 타이머 시작 시간 초기화
   };
 
   return (
@@ -129,7 +132,12 @@ export const TimerSection = ({ selectedDate }) => {
           </div>
           <div className="flex gap-4 justify-center">
             <button
-              onClick={isRunning ? handlePauseTimer : startTimer}
+              onClick={isRunning ? handlePauseTimer : () => {
+                if (!timerStartTime) {
+                  setTimerStartTime(new Date());
+                }
+                startTimer();
+              }}
               className="bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2"
             >
               {isRunning ? <Pause size={20} /> : <Play size={20} />}
@@ -149,10 +157,21 @@ export const TimerSection = ({ selectedDate }) => {
       {/* Reflection Form */}
       {showReflection && (
         <div className="mb-8 p-6 bg-green-50 rounded-xl">
-          <h2 className="text-xl font-semibold mb-6 text-green-700 flex items-center gap-2">
+          <h2 className="text-xl font-semibold mb-4 text-green-700 flex items-center gap-2">
             <BookOpen />
             10분 집중 시간이 끝났어요! 회고를 작성해주세요
           </h2>
+          
+          {/* 작업 내용 표시 */}
+          <div className="mb-6 p-4 bg-white rounded-lg border border-green-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="text-green-600 w-5 h-5" />
+              <span className="text-sm font-medium text-gray-600">이번 작업 내용</span>
+            </div>
+            <p className="text-lg font-semibold text-gray-800 bg-gray-50 p-3 rounded-md border-l-4 border-green-400">
+              {currentTask || '작업 내용이 없습니다'}
+            </p>
+          </div>
           
           <div className="space-y-4">
             <div>
@@ -164,7 +183,7 @@ export const TimerSection = ({ selectedDate }) => {
                 onChange={(e) => setReflection(prev => ({...prev, result: e.target.value}))}
                 className="w-full p-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 resize-vertical max-h-[500px]"
                 rows={3}
-                placeholder="어떤 성과를 얻으셨나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)"
+                placeholder={`작업을 통해 어떤 성과를 얻으셨나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)`}
               />
             </div>
             
@@ -177,7 +196,7 @@ export const TimerSection = ({ selectedDate }) => {
                 onChange={(e) => setReflection(prev => ({...prev, distractions: e.target.value}))}
                 className="w-full p-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 resize-vertical max-h-[500px]"
                 rows={3}
-                placeholder="어떤 것들이 집중을 방해했나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)"
+                placeholder={`작업 중에 어떤 것들이 집중을 방해했나요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)`}
               />
             </div>
             
@@ -190,7 +209,7 @@ export const TimerSection = ({ selectedDate }) => {
                 onChange={(e) => setReflection(prev => ({...prev, thoughts: e.target.value}))}
                 className="w-full p-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 resize-vertical max-h-[500px]"
                 rows={3}
-                placeholder="어떤 생각이 드시나요? 다음에는 어떻게 개선할 수 있을까요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)"
+                placeholder={`작업에 대한 전체적인 생각은 어떠신가요? 다음에는 어떻게 개선할 수 있을까요? (마크다운 지원: **굵게**, *기울임*, - 목록 등)`}
               />
             </div>
             
