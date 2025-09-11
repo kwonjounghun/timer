@@ -203,6 +203,36 @@ export const updateDailyChecklist = async (checklistId, updateData) => {
 };
 
 /**
+ * 모든 일일 체크리스트 조회
+ * @param {number} limitCount - 조회할 최대 개수
+ * @returns {Promise<Array>} 체크리스트 목록
+ */
+export const getAllDailyChecklists = async (limitCount = 100) => {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.DAILY_CHECKLISTS),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const checklists = [];
+    
+    querySnapshot.forEach((doc) => {
+      checklists.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    return checklists;
+  } catch (error) {
+    console.error('모든 일일 체크리스트 조회 실패:', error);
+    throw error;
+  }
+};
+
+/**
  * Firebase 연결 테스트
  * @returns {Promise<boolean>} 연결 성공 여부
  */
