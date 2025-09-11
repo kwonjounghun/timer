@@ -164,9 +164,20 @@ export const TimerSection = ({ selectedDate }) => {
           <div className="text-6xl font-mono font-bold mb-4 text-gray-800">
             {formatTime(timeLeft)}
           </div>
-          <div className="text-xl text-gray-600 mb-6">
+          <div className="text-xl text-gray-600 mb-4">
             현재 작업: <span className="font-semibold text-blue-600">{currentTask}</span>
           </div>
+          {timerStartTime && (
+            <div className="text-sm text-gray-500 mb-6">
+              시작 시간: <span className="font-medium text-gray-700">
+                {timerStartTime.toLocaleTimeString('ko-KR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </span>
+            </div>
+          )}
           <div className="flex gap-4 justify-center">
             <button
               onClick={isRunning ? handlePauseTimer : startTimer}
