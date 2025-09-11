@@ -105,6 +105,11 @@ VITE_FIREBASE_APP_ID=your_app_id
 - Firebase 환경변수가 설정되어 있으면 Firebase 사용
 - 환경변수가 없으면 로컬스토리지 사용
 
+### 3. 배포 확인
+- GitHub Actions 탭에서 배포 상태 확인
+- 배포 완료 후 `https://[username].github.io/[repository-name]`에서 확인
+- 우측 하단 스토리지 인디케이터로 현재 사용 중인 스토리지 확인
+
 ## 개발자 도구
 
 - `src/utils/storageType.js`: 스토리지 타입 감지
