@@ -93,8 +93,8 @@ Repository Settings → Pages에서 다음 설정:
 - **Source**: GitHub Actions
 - **Branch**: gh-pages (자동 생성됨)
 
-### 2. GitHub Secrets 설정 (선택사항)
-Repository Settings → Secrets and variables → Actions에서 다음 환경변수 설정:
+### 2. GitHub Variables 설정 (선택사항)
+Repository Settings → Secrets and variables → Actions → Variables 탭에서 다음 환경변수 설정:
 
 ```
 VITE_FIREBASE_API_KEY=your_api_key_here
@@ -107,8 +107,10 @@ VITE_FIREBASE_APP_ID=your_app_id
 
 ### 3. 자동 배포
 - `main` 브랜치에 푸시하면 자동으로 GitHub Pages에 배포
-- Firebase 환경변수가 설정되어 있으면 Firebase 사용
-- 환경변수가 없으면 로컬스토리지 사용
+- Firebase Variables가 설정되어 있으면 Firebase 사용
+- Variables가 없으면 로컬스토리지 사용
+
+**참고**: Firebase API Key는 공개되어도 안전하지만, 더 안전하게 하려면 Secrets를 사용할 수도 있습니다.
 
 ### 4. 배포 확인
 - GitHub Actions 탭에서 배포 상태 확인
