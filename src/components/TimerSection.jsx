@@ -31,6 +31,7 @@ export const TimerSection = ({ selectedDate }) => {
     thoughts: ''
   });
   const [timerStartTime, setTimerStartTime] = useState(null);
+  const [timerEndTime, setTimerEndTime] = useState(null);
 
   const handleStartTimer = () => {
     if (currentTask.trim()) {
@@ -47,11 +48,13 @@ export const TimerSection = ({ selectedDate }) => {
 
   const handleStopTimer = () => {
     pauseTimer();
+    setTimerEndTime(new Date()); // 타이머 중단 시간 저장
     setShowReflection(true);
   };
 
   const handleTimerComplete = useCallback(() => {
     pauseTimer();
+    setTimerEndTime(new Date()); // 10분 타이머 완료 시간 저장
     setShowReflection(true);
     playNotification(currentTask || '작업');
   }, [pauseTimer, playNotification, currentTask]);
@@ -64,8 +67,8 @@ export const TimerSection = ({ selectedDate }) => {
   }, [timeLeft, isRunning, handleTimerComplete]);
 
   const saveReflection = () => {
-    const endTime = new Date();
-    const startTime = timerStartTime || new Date(endTime.getTime() - (10 * 60 - timeLeft) * 1000);
+    const startTime = timerStartTime || new Date();
+    const endTime = timerEndTime || new Date(); // 타이머 완료 시간 사용
 
     // 정확한 소요 시간 계산 (실제 경과 시간 기반)
     const actualTimeSpent = Math.max(0, 10 * 60 - timeLeft);
@@ -74,7 +77,7 @@ export const TimerSection = ({ selectedDate }) => {
       date: selectedDate,
       task: currentTask,
       startTime: startTime,
-      endTime: endTime,
+      endTime: endTime, // 10분 타이머 완료 시간
       timeSpent: actualTimeSpent,
       result: reflection.result,
       distractions: reflection.distractions,
@@ -91,6 +94,7 @@ export const TimerSection = ({ selectedDate }) => {
     setShowTaskInput(true);
     setCurrentTask('');
     setTimerStartTime(null); // 타이머 시작 시간 초기화
+    setTimerEndTime(null); // 타이머 완료 시간 초기화
   };
 
   return (
