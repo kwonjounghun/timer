@@ -11,6 +11,8 @@ export const DailyChecklist = ({ selectedDate, isExpanded, onToggle }) => {
     checkData,
     expandedSections,
     editMode,
+    storageType,
+    firebaseConnectionStatus,
     toggleSection,
     updateAnswer,
     toggleEditMode,
@@ -49,6 +51,26 @@ export const DailyChecklist = ({ selectedDate, isExpanded, onToggle }) => {
           <h1 className="text-2xl font-bold text-gray-800">일일 점검 시스템</h1>
         </div>
         <div className="flex items-center gap-2">
+          {/* 스토리지 타입 및 Firebase 연결 상태 표시 */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className={`px-2 py-1 rounded text-xs font-medium ${
+              storageType === 'firebase' 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-blue-100 text-blue-700'
+            }`}>
+              {storageType === 'firebase' ? '🔥 Firebase' : '💾 Local'}
+            </span>
+            {firebaseConnectionStatus && (
+              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                firebaseConnectionStatus.success 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-red-100 text-red-700'
+              }`}>
+                {firebaseConnectionStatus.success ? '✅ 연결됨' : '❌ 연결 실패'}
+              </span>
+            )}
+          </div>
+          
           {(hasData || editMode) && (
             <div className="flex items-center gap-2">
               {!editMode ? (
