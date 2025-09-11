@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export const useTimer = (initialTime = 10 * 60) => {
+export const useTimer = (initialTime = 10 * 60, onComplete = null) => {
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
@@ -29,8 +29,12 @@ export const useTimer = (initialTime = 10 * 60) => {
     if (remaining <= 0) {
       setIsRunning(false);
       setTimeLeft(0);
+      // 완료 콜백 호출
+      if (onComplete) {
+        onComplete();
+      }
     }
-  }, [isRunning, startTime, pausedTime, calculateTimeLeft]);
+  }, [isRunning, startTime, pausedTime, calculateTimeLeft, onComplete]);
 
   // 주기적으로 타이머 업데이트 (UI 갱신용)
   useEffect(() => {

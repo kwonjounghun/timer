@@ -8,7 +8,6 @@ import { formatDate, formatTime as formatTimeFromUtils } from '../utils/dateUtil
 import { getStorageInfo } from '../utils/storageType';
 
 export const TimerSection = ({ selectedDate }) => {
-  const { timeLeft, isRunning, startTimer, pauseTimer, resetTimer, formatTime } = useTimer();
   const { playNotification, requestNotificationPermission, notificationPermission } = useAudio();
   const {
     cyclesByDate,
@@ -33,6 +32,16 @@ export const TimerSection = ({ selectedDate }) => {
   const [timerStartTime, setTimerStartTime] = useState(null);
   const [timerEndTime, setTimerEndTime] = useState(null);
 
+  // 타이머 완료 핸들러
+  const handleTimerComplete = useCallback(() => {
+    setTimerEndTime(new Date()); // 10분 타이머 완료 시간 저장
+    setShowReflection(true);
+    playNotification(currentTask || '작업');
+  }, [playNotification, currentTask]);
+
+  // useTimer 훅에 완료 콜백 전달
+  const { timeLeft, isRunning, startTimer, pauseTimer, resetTimer, formatTime } = useTimer(10 * 60, handleTimerComplete);
+
   const handleStartTimer = () => {
     if (currentTask.trim()) {
       setShowTaskInput(false);
@@ -52,19 +61,6 @@ export const TimerSection = ({ selectedDate }) => {
     setShowReflection(true);
   };
 
-  const handleTimerComplete = useCallback(() => {
-    pauseTimer();
-    setTimerEndTime(new Date()); // 10분 타이머 완료 시간 저장
-    setShowReflection(true);
-    playNotification(currentTask || '작업');
-  }, [pauseTimer, playNotification, currentTask]);
-
-  // 타이머 완료 감지
-  useEffect(() => {
-    if (timeLeft === 0 && isRunning) {
-      handleTimerComplete();
-    }
-  }, [timeLeft, isRunning, handleTimerComplete]);
 
   const saveReflection = () => {
     const startTime = timerStartTime || new Date();
