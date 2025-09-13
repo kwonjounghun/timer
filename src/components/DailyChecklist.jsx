@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft, Calendar, Edit, X, Check, Copy } from 'lucide-react';
-import { useDailyChecklist } from '../hooks/useDailyChecklist';
+import { useDailyChecklist } from '../adapters/react/useDailyChecklist';
 import { checklistTemplate } from '../constants/checklistTemplate';
 import { copySectionContent } from '../utils/clipboardUtils';
 import { MarkdownRenderer } from './MarkdownRenderer';
