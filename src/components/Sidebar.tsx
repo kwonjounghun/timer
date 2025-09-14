@@ -1,10 +1,10 @@
-import { Timer, Calendar, CheckSquare, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Timer, Calendar, CheckSquare, BookOpen, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  activeSection: 'timer' | 'checklist' | 'todo';
-  onSectionChange: (section: 'timer' | 'checklist' | 'todo') => void;
+  activeSection: 'timer' | 'checklist' | 'todo' | 'links';
+  onSectionChange: (section: 'timer' | 'checklist' | 'todo' | 'links') => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -19,6 +19,12 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const menuItems = [
     {
+      id: 'todo' as const,
+      label: '할 일 관리',
+      icon: CheckSquare,
+      description: '개인 할 일 목록 & 우선순위'
+    },
+    {
       id: 'timer' as const,
       label: '10분 집중 타이머',
       icon: Timer,
@@ -31,10 +37,10 @@ export const Sidebar = ({
       description: '하루 계획 & 회고'
     },
     {
-      id: 'todo' as const,
-      label: '할 일 관리',
-      icon: CheckSquare,
-      description: '개인 할 일 목록 & 우선순위'
+      id: 'links' as const,
+      label: '문서 링크 관리',
+      icon: BookOpen,
+      description: '읽을 문서 링크 & 상태 관리'
     }
   ];
 
