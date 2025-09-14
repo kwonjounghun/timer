@@ -31,11 +31,7 @@ export const TodoInput: React.FC<TodoInputProps> = ({ onAddTodo }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-        <Plus className="text-blue-500" size={20} />
-        새 할 일 추가
-      </h3>
+    <form onSubmit={handleSubmit} className="space-y-4">
 
       <div className="space-y-4">
         {/* 제목 입력 */}
