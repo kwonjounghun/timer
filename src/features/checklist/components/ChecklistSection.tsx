@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, ChevronRight, Copy, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Eye, EyeOff, Code2 } from 'lucide-react';
 import { checklistTemplate } from '../../../constants/checklistTemplate';
 import { copySectionContent } from '../../../utils/clipboardUtils';
 import { MarkdownRenderer } from '../../../components/MarkdownRenderer';
@@ -22,6 +22,7 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({
     editMode,
     toggleSection,
     updateAnswer,
+    updateAnswerWithFormatting,
     togglePreview
   } = checklistLogic;
 
@@ -89,26 +90,39 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({
                           <div className="flex items-center gap-2">
                             <MarkdownHelp />
                             {currentValue.trim() && (
-                              <button
-                                onClick={() => togglePreview(sectionKey, index)}
-                                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${isPreviewMode
-                                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                  }`}
-                                title={isPreviewMode ? '편집 모드로 전환' : '미리보기 모드로 전환'}
-                              >
-                                {isPreviewMode ? (
-                                  <>
-                                    <EyeOff size={14} />
-                                    편집
-                                  </>
-                                ) : (
-                                  <>
-                                    <Eye size={14} />
-                                    미리보기
-                                  </>
-                                )}
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => {
+                                    console.log('Formatting button clicked');
+                                    updateAnswerWithFormatting(selectedDate, sectionKey, index, currentValue);
+                                  }}
+                                  className="flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200 active:bg-green-300"
+                                  title="코드 포맷팅 적용"
+                                >
+                                  <Code2 size={14} />
+                                  포맷팅
+                                </button>
+                                <button
+                                  onClick={() => togglePreview(sectionKey, index)}
+                                  className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${isPreviewMode
+                                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                                  title={isPreviewMode ? '편집 모드로 전환' : '미리보기 모드로 전환'}
+                                >
+                                  {isPreviewMode ? (
+                                    <>
+                                      <EyeOff size={14} />
+                                      편집
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye size={14} />
+                                      미리보기
+                                    </>
+                                  )}
+                                </button>
+                              </>
                             )}
                           </div>
                         )}
@@ -130,6 +144,13 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({
                           <textarea
                             value={currentValue}
                             onChange={(e) => updateAnswer(selectedDate, sectionKey, index, e.target.value)}
+                            onBlur={(e) => {
+                              // 포커스를 잃을 때 자동으로 포맷팅 적용
+                              if (e.target.value.trim() && e.target.value !== currentValue) {
+                                console.log('Auto-formatting on blur');
+                                updateAnswerWithFormatting(selectedDate, sectionKey, index, e.target.value);
+                              }
+                            }}
                             rows={sectionKey === 'reflection' ? 4 : 3}
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent resize-vertical max-h-[500px] ${sectionKey === 'reflection'
                               ? 'border-purple-300 focus:ring-purple-500 bg-purple-50'

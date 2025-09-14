@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { checklistTemplate } from '../../../constants/checklistTemplate';
 import { getStorageInfo } from '../../../utils/storageType';
+import { formatMarkdown, hasCodeBlocks } from '../../../utils/markdownFormatter';
 
 export interface ChecklistData {
   date: string;
@@ -30,6 +31,7 @@ export interface ChecklistLogic {
   // Actions
   toggleSection: (sectionKey: string) => void;
   updateAnswer: (date: string, sectionKey: string, questionIndex: number, value: string) => void;
+  updateAnswerWithFormatting: (date: string, sectionKey: string, questionIndex: number, value: string) => void;
   togglePreview: (sectionKey: string, questionIndex: number) => void;
   toggleEditMode: () => void;
   completeEdit: () => void;
@@ -87,6 +89,34 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
       }
     }));
   }, []);
+
+  // Format and update answer with code formatting
+  const updateAnswerWithFormatting = useCallback((date: string, sectionKey: string, questionIndex: number, value: string) => {
+    let formattedValue = value;
+
+    // 코드블럭이 있는 경우에만 포맷팅 적용
+    if (hasCodeBlocks(value)) {
+      try {
+        console.log('Formatting content with code blocks:', value);
+        formattedValue = formatMarkdown(value);
+        console.log('Formatted result:', formattedValue);
+
+        // 포맷팅이 실제로 변경되었는지 확인
+        if (formattedValue !== value) {
+          console.log('Content was formatted successfully');
+        } else {
+          console.log('No formatting changes applied');
+        }
+      } catch (error) {
+        console.warn('Failed to format markdown:', error);
+        formattedValue = value; // 포맷팅 실패 시 원본 사용
+      }
+    } else {
+      console.log('No code blocks found, skipping formatting');
+    }
+
+    updateAnswer(date, sectionKey, questionIndex, formattedValue);
+  }, [updateAnswer]);
 
   // Toggle preview
   const togglePreview = useCallback((sectionKey: string, questionIndex: number) => {
@@ -163,6 +193,7 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     // Actions
     toggleSection,
     updateAnswer,
+    updateAnswerWithFormatting,
     togglePreview,
     toggleEditMode,
     completeEdit,

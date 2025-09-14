@@ -103,6 +103,8 @@ export const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ className = "" }) =>
                   <li>• 코드블럭에는 언어를 지정할 수 있습니다: ```javascript, ```python, ```css 등</li>
                   <li>• 미리보기 버튼을 사용하여 작성 중인 내용을 실시간으로 확인하세요</li>
                   <li>• 마크다운 문법은 대소문자를 구분합니다</li>
+                  <li>• <strong>포맷팅 버튼</strong>을 클릭하면 코드블럭이 자동으로 정리됩니다</li>
+                  <li>• 텍스트 영역에서 포커스를 잃으면 자동으로 포맷팅이 적용됩니다</li>
                 </ul>
               </div>
             </div>
