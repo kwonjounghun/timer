@@ -7,9 +7,10 @@ import { DailyChecklistFeature } from './features/checklist/DailyChecklistFeatur
 import { TodoFeature } from './features/todo/TodoFeature';
 import { LinksFeature } from './features/links/LinksFeature';
 import { ConceptMapFeature } from './features/conceptmap/ConceptMapFeature';
+import { MigrationFeature } from './features/migration/MigrationFeature';
 import StorageIndicator from './components/StorageIndicator';
 
-type ActiveSection = 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap';
+type ActiveSection = 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap' | 'migration';
 
 const AppContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -21,7 +22,7 @@ const AppContent: React.FC = () => {
     const updateSectionFromURL = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const section = urlParams.get('section') as ActiveSection;
-      if (section && (section === 'timer' || section === 'checklist' || section === 'todo' || section === 'links' || section === 'conceptmap')) {
+      if (section && (section === 'timer' || section === 'checklist' || section === 'todo' || section === 'links' || section === 'conceptmap' || section === 'migration')) {
         setActiveSection(section);
       }
     };
@@ -71,7 +72,8 @@ const AppContent: React.FC = () => {
       checklist: '일일 점검 시스템',
       todo: '할 일 관리',
       links: '문서 링크 관리',
-      conceptmap: '컨셉맵 링크 관리'
+      conceptmap: '컨셉맵 링크 관리',
+      migration: '데이터 마이그레이션'
     };
     document.title = `${sectionTitles[activeSection]} - Timer App`;
   }, [activeSection]);
@@ -133,6 +135,10 @@ const AppContent: React.FC = () => {
 
           {activeSection === 'conceptmap' && (
             <ConceptMapFeature />
+          )}
+
+          {activeSection === 'migration' && (
+            <MigrationFeature />
           )}
         </div>
       </div>
