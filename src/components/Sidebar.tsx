@@ -1,10 +1,10 @@
-import { Timer, Calendar, CheckSquare, BookOpen, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Timer, Calendar, CheckSquare, BookOpen, Network, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  activeSection: 'timer' | 'checklist' | 'todo' | 'links';
-  onSectionChange: (section: 'timer' | 'checklist' | 'todo' | 'links') => void;
+  activeSection: 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap';
+  onSectionChange: (section: 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap') => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -41,6 +41,12 @@ export const Sidebar = ({
       label: '문서 링크 관리',
       icon: BookOpen,
       description: '읽을 문서 링크 & 상태 관리'
+    },
+    {
+      id: 'conceptmap' as const,
+      label: '컨셉맵 링크',
+      icon: Network,
+      description: '컨셉맵 링크 관리'
     }
   ];
 
