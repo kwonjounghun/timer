@@ -1,10 +1,10 @@
-import { Timer, Calendar, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Timer, Calendar, CheckSquare, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  activeSection: 'timer' | 'checklist';
-  onSectionChange: (section: 'timer' | 'checklist') => void;
+  activeSection: 'timer' | 'checklist' | 'todo';
+  onSectionChange: (section: 'timer' | 'checklist' | 'todo') => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -29,6 +29,12 @@ export const Sidebar = ({
       label: '일일 점검 시스템',
       icon: Calendar,
       description: '하루 계획 & 회고'
+    },
+    {
+      id: 'todo' as const,
+      label: '할 일 관리',
+      icon: CheckSquare,
+      description: '개인 할 일 목록 & 우선순위'
     }
   ];
 

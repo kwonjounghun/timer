@@ -4,9 +4,10 @@ import { Sidebar } from './components/Sidebar';
 import { DateNavigationRefactored } from './components/DateNavigationRefactored';
 import { TimerFeature } from './features/timer/TimerFeature';
 import { DailyChecklistFeature } from './features/checklist/DailyChecklistFeature';
+import { TodoFeature } from './features/todo/TodoFeature';
 import StorageIndicator from './components/StorageIndicator';
 
-type ActiveSection = 'timer' | 'checklist';
+type ActiveSection = 'timer' | 'checklist' | 'todo';
 
 const AppContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -18,7 +19,7 @@ const AppContent: React.FC = () => {
     const updateSectionFromURL = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const section = urlParams.get('section') as ActiveSection;
-      if (section && (section === 'timer' || section === 'checklist')) {
+      if (section && (section === 'timer' || section === 'checklist' || section === 'todo')) {
         setActiveSection(section);
       }
     };
@@ -63,8 +64,12 @@ const AppContent: React.FC = () => {
 
   // 페이지 제목을 활성 섹션에 따라 업데이트
   useEffect(() => {
-    const sectionTitle = activeSection === 'timer' ? '10분 집중 타이머' : '일일 점검 시스템';
-    document.title = `${sectionTitle} - Timer App`;
+    const sectionTitles = {
+      timer: '10분 집중 타이머',
+      checklist: '일일 점검 시스템',
+      todo: '할 일 관리'
+    };
+    document.title = `${sectionTitles[activeSection]} - Timer App`;
   }, [activeSection]);
 
 
@@ -107,6 +112,12 @@ const AppContent: React.FC = () => {
           {activeSection === 'checklist' && (
             <div className="max-w-4xl mx-auto">
               <DailyChecklistFeature />
+            </div>
+          )}
+
+          {activeSection === 'todo' && (
+            <div className="max-w-4xl mx-auto">
+              <TodoFeature />
             </div>
           )}
         </div>
