@@ -1,5 +1,5 @@
 import { getStorageType } from './storageType';
-import { 
+import {
   saveFocusCycle as firebaseSaveFocusCycle,
   getFocusCyclesByDate as firebaseGetFocusCyclesByDate,
   getAllFocusCycles as firebaseGetAllFocusCycles,
@@ -14,7 +14,10 @@ import {
 // 로컬스토리지 키 상수
 const STORAGE_KEYS = {
   FOCUS_CYCLES: 'focus_cycles',
-  DAILY_CHECKLISTS: 'daily_checklists'
+  DAILY_CHECKLISTS: 'daily_checklists',
+  LINKS: 'linkItems',
+  CONCEPTMAP: 'conceptmap-links',
+  TODOS: 'todoItems'
 };
 
 // 로컬스토리지 유틸리티 함수들
@@ -149,6 +152,124 @@ const localStorageApi = {
     return checklists
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, limit);
+  },
+
+  // 링크 관리 API
+  saveLink: async (linkData) => {
+    const links = localStorageUtils.getItem(STORAGE_KEYS.LINKS) || [];
+    const newLink = {
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...linkData,
+      createdAt: new Date(),
+      readAt: linkData.isRead ? new Date() : undefined
+    };
+    links.push(newLink);
+    localStorageUtils.setItem(STORAGE_KEYS.LINKS, links);
+    return newLink.id;
+  },
+
+  getLinks: async () => {
+    return localStorageUtils.getItem(STORAGE_KEYS.LINKS) || [];
+  },
+
+  updateLink: async (linkId, updateData) => {
+    const links = localStorageUtils.getItem(STORAGE_KEYS.LINKS) || [];
+    const index = links.findIndex(link => link.id === linkId);
+    if (index !== -1) {
+      links[index] = {
+        ...links[index],
+        ...updateData,
+        readAt: updateData.isRead && !links[index].isRead ? new Date() : links[index].readAt
+      };
+      localStorageUtils.setItem(STORAGE_KEYS.LINKS, links);
+      return true;
+    }
+    return false;
+  },
+
+  deleteLink: async (linkId) => {
+    const links = localStorageUtils.getItem(STORAGE_KEYS.LINKS) || [];
+    const filteredLinks = links.filter(link => link.id !== linkId);
+    localStorageUtils.setItem(STORAGE_KEYS.LINKS, filteredLinks);
+    return true;
+  },
+
+  // 컨셉맵 관리 API
+  saveConceptMap: async (conceptMapData) => {
+    const conceptMaps = localStorageUtils.getItem(STORAGE_KEYS.CONCEPTMAP) || [];
+    const newConceptMap = {
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...conceptMapData,
+      createdAt: new Date()
+    };
+    conceptMaps.push(newConceptMap);
+    localStorageUtils.setItem(STORAGE_KEYS.CONCEPTMAP, conceptMaps);
+    return newConceptMap.id;
+  },
+
+  getConceptMaps: async () => {
+    return localStorageUtils.getItem(STORAGE_KEYS.CONCEPTMAP) || [];
+  },
+
+  updateConceptMap: async (conceptMapId, updateData) => {
+    const conceptMaps = localStorageUtils.getItem(STORAGE_KEYS.CONCEPTMAP) || [];
+    const index = conceptMaps.findIndex(conceptMap => conceptMap.id === conceptMapId);
+    if (index !== -1) {
+      conceptMaps[index] = {
+        ...conceptMaps[index],
+        ...updateData
+      };
+      localStorageUtils.setItem(STORAGE_KEYS.CONCEPTMAP, conceptMaps);
+      return true;
+    }
+    return false;
+  },
+
+  deleteConceptMap: async (conceptMapId) => {
+    const conceptMaps = localStorageUtils.getItem(STORAGE_KEYS.CONCEPTMAP) || [];
+    const filteredConceptMaps = conceptMaps.filter(conceptMap => conceptMap.id !== conceptMapId);
+    localStorageUtils.setItem(STORAGE_KEYS.CONCEPTMAP, filteredConceptMaps);
+    return true;
+  },
+
+  // 할일 관리 API
+  saveTodo: async (todoData) => {
+    const todos = localStorageUtils.getItem(STORAGE_KEYS.TODOS) || [];
+    const newTodo = {
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...todoData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    todos.push(newTodo);
+    localStorageUtils.setItem(STORAGE_KEYS.TODOS, todos);
+    return newTodo.id;
+  },
+
+  getTodos: async () => {
+    return localStorageUtils.getItem(STORAGE_KEYS.TODOS) || [];
+  },
+
+  updateTodo: async (todoId, updateData) => {
+    const todos = localStorageUtils.getItem(STORAGE_KEYS.TODOS) || [];
+    const index = todos.findIndex(todo => todo.id === todoId);
+    if (index !== -1) {
+      todos[index] = {
+        ...todos[index],
+        ...updateData,
+        updatedAt: new Date()
+      };
+      localStorageUtils.setItem(STORAGE_KEYS.TODOS, todos);
+      return true;
+    }
+    return false;
+  },
+
+  deleteTodo: async (todoId) => {
+    const todos = localStorageUtils.getItem(STORAGE_KEYS.TODOS) || [];
+    const filteredTodos = todos.filter(todo => todo.id !== todoId);
+    localStorageUtils.setItem(STORAGE_KEYS.TODOS, filteredTodos);
+    return true;
   }
 };
 
@@ -241,6 +362,129 @@ export const hybridStorage = {
       return await firebaseGetAllDailyChecklists(limit);
     } else {
       return await localStorageApi.getAllDailyChecklists(limit);
+    }
+  },
+
+  // 링크 관리
+  saveLink: async (linkData) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.saveLink(linkData);
+    } else {
+      return await localStorageApi.saveLink(linkData);
+    }
+  },
+
+  getLinks: async () => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.getLinks();
+    } else {
+      return await localStorageApi.getLinks();
+    }
+  },
+
+  updateLink: async (linkId, updateData) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.updateLink(linkId, updateData);
+    } else {
+      return await localStorageApi.updateLink(linkId, updateData);
+    }
+  },
+
+  deleteLink: async (linkId) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.deleteLink(linkId);
+    } else {
+      return await localStorageApi.deleteLink(linkId);
+    }
+  },
+
+  // 컨셉맵 관리
+  saveConceptMap: async (conceptMapData) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.saveConceptMap(conceptMapData);
+    } else {
+      return await localStorageApi.saveConceptMap(conceptMapData);
+    }
+  },
+
+  getConceptMaps: async () => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.getConceptMaps();
+    } else {
+      return await localStorageApi.getConceptMaps();
+    }
+  },
+
+  updateConceptMap: async (conceptMapId, updateData) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.updateConceptMap(conceptMapId, updateData);
+    } else {
+      return await localStorageApi.updateConceptMap(conceptMapId, updateData);
+    }
+  },
+
+  deleteConceptMap: async (conceptMapId) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.deleteConceptMap(conceptMapId);
+    } else {
+      return await localStorageApi.deleteConceptMap(conceptMapId);
+    }
+  },
+
+  // 할일 관리
+  saveTodo: async (todoData) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.saveTodo(todoData);
+    } else {
+      return await localStorageApi.saveTodo(todoData);
+    }
+  },
+
+  getTodos: async () => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.getTodos();
+    } else {
+      return await localStorageApi.getTodos();
+    }
+  },
+
+  updateTodo: async (todoId, updateData) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.updateTodo(todoId, updateData);
+    } else {
+      return await localStorageApi.updateTodo(todoId, updateData);
+    }
+  },
+
+  deleteTodo: async (todoId) => {
+    const storageType = getStorageType();
+    if (storageType === 'firebase') {
+      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
+      return await localStorageApi.deleteTodo(todoId);
+    } else {
+      return await localStorageApi.deleteTodo(todoId);
     }
   },
 

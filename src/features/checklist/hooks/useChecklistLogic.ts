@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { checklistTemplate } from '../../../constants/checklistTemplate';
 import { getStorageInfo } from '../../../utils/storageType';
 import { formatMarkdown, hasCodeBlocks } from '../../../utils/markdownFormatter';
+import { hybridStorage } from '../../../utils/hybridStorage';
 
 export interface ChecklistData {
   date: string;
@@ -74,20 +75,30 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
   }, []);
 
   // Update answer
-  const updateAnswer = useCallback((date: string, sectionKey: string, questionIndex: number, value: string) => {
-    setChecklistData(prev => ({
-      ...prev,
-      [date]: {
-        date,
-        data: {
-          ...prev[date]?.data,
-          [sectionKey]: {
-            ...prev[date]?.data?.[sectionKey],
-            [questionIndex]: value,
+  const updateAnswer = useCallback(async (date: string, sectionKey: string, questionIndex: number, value: string) => {
+    setChecklistData(prev => {
+      const newData = {
+        ...prev,
+        [date]: {
+          date,
+          data: {
+            ...prev[date]?.data,
+            [sectionKey]: {
+              ...prev[date]?.data?.[sectionKey],
+              [questionIndex]: value,
+            }
           }
         }
-      }
-    }));
+      };
+
+      // Save using hybrid storage
+      const checklistToSave = newData[date];
+      hybridStorage.saveDailyChecklist(checklistToSave).catch(error => {
+        console.error('체크리스트 저장 실패:', error);
+      });
+
+      return newData;
+    });
   }, []);
 
   // Format and update answer with code formatting
@@ -164,22 +175,24 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
 
   // Load data from localStorage on mount only
   useEffect(() => {
-    const saved = localStorage.getItem('dailyChecklistData');
-    if (saved) {
+    const loadChecklistData = async () => {
       try {
-        setChecklistData(JSON.parse(saved));
+        const checklists = await hybridStorage.getAllDailyChecklists();
+        // Convert array to object format
+        const dataObject: Record<string, ChecklistData> = {};
+        checklists.forEach((checklist: any) => {
+          dataObject[checklist.date] = checklist;
+        });
+        setChecklistData(dataObject);
       } catch (error) {
-        console.error('Failed to parse checklist data:', error);
+        console.error('Failed to load checklist data:', error);
       }
-    }
+    };
+
+    loadChecklistData();
   }, []); // 컴포넌트 마운트 시에만 로드
 
-  // Save data to localStorage when it changes (only if not empty)
-  useEffect(() => {
-    if (Object.keys(checklistData).length > 0) {
-      localStorage.setItem('dailyChecklistData', JSON.stringify(checklistData));
-    }
-  }, [checklistData]);
+  // Remove the automatic save effect since we're using hybrid storage for individual operations
 
   return {
     // State

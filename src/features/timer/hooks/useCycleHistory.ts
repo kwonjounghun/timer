@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { hybridStorage } from '../../../utils/hybridStorage';
 
 export interface FocusCycle {
   id: string;
@@ -51,13 +52,15 @@ export const useCycleHistory = (selectedDate: string): CycleHistory => {
   }, []);
 
   // Update existing cycle
-  const updateCycle = useCallback((cycleId: string, updates: Partial<FocusCycle>) => {
+  const updateCycle = useCallback(async (cycleId: string, updates: Partial<FocusCycle>) => {
     setFocusCycles(prev => {
       const updated = prev.map(cycle =>
         cycle.id === cycleId ? { ...cycle, ...updates } : cycle
       );
-      // Save to localStorage immediately
-      localStorage.setItem('focusCycles', JSON.stringify(updated));
+      // Save using hybrid storage
+      hybridStorage.updateFocusCycle(cycleId, updates).catch(error => {
+        console.error('포커스 사이클 업데이트 실패:', error);
+      });
       // Dispatch custom event for DateNavigation to update
       window.dispatchEvent(new CustomEvent('cycleUpdated', { detail: { cycleId, updates } }));
       return updated;
@@ -65,11 +68,13 @@ export const useCycleHistory = (selectedDate: string): CycleHistory => {
   }, []);
 
   // Delete cycle
-  const deleteCycle = useCallback((cycleId: string) => {
+  const deleteCycle = useCallback(async (cycleId: string) => {
     setFocusCycles(prev => {
       const filtered = prev.filter(cycle => cycle.id !== cycleId);
-      // Save to localStorage immediately
-      localStorage.setItem('focusCycles', JSON.stringify(filtered));
+      // Save using hybrid storage
+      hybridStorage.deleteFocusCycle(cycleId).catch(error => {
+        console.error('포커스 사이클 삭제 실패:', error);
+      });
       // Dispatch custom event for DateNavigation to update
       window.dispatchEvent(new CustomEvent('cycleDeleted', { detail: { cycleId } }));
       return filtered;
@@ -82,29 +87,26 @@ export const useCycleHistory = (selectedDate: string): CycleHistory => {
     });
   }, []);
 
-  // Load data from localStorage on mount only
+  // Load data from hybrid storage on mount only
   useEffect(() => {
-    const saved = localStorage.getItem('focusCycles');
-    if (saved) {
+    const loadCycles = async () => {
       try {
-        const parsedCycles = JSON.parse(saved).map((cycle: any) => ({
+        const cycles = await hybridStorage.getAllFocusCycles();
+        const parsedCycles = cycles.map((cycle: any) => ({
           ...cycle,
           startTime: new Date(cycle.startTime),
           endTime: new Date(cycle.endTime),
         }));
         setFocusCycles(parsedCycles);
       } catch (error) {
-        console.error('Failed to parse focus cycles:', error);
+        console.error('Failed to load focus cycles:', error);
       }
-    }
+    };
+
+    loadCycles();
   }, []); // 컴포넌트 마운트 시에만 로드
 
-  // Save data to localStorage when it changes (only if not empty)
-  useEffect(() => {
-    if (focusCycles.length > 0) {
-      localStorage.setItem('focusCycles', JSON.stringify(focusCycles));
-    }
-  }, [focusCycles]);
+  // Remove the automatic save effect since we're using hybrid storage for individual operations
 
   return {
     focusCycles,

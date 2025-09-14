@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { hybridStorage } from '../../../utils/hybridStorage';
 
 export interface LinkItem {
   id: string;
@@ -31,29 +32,26 @@ export const useLinksLogic = (): LinksLogic => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
 
-  // Load data from localStorage on mount
+  // Load data from hybrid storage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('linkItems');
-    if (saved) {
+    const loadLinks = async () => {
       try {
-        const parsedLinks = JSON.parse(saved).map((link: any) => ({
+        const links = await hybridStorage.getLinks();
+        const parsedLinks = links.map((link: any) => ({
           ...link,
           createdAt: new Date(link.createdAt),
           readAt: link.readAt ? new Date(link.readAt) : undefined,
         }));
         setLinks(parsedLinks);
       } catch (error) {
-        console.error('Failed to parse link data:', error);
+        console.error('Failed to load links:', error);
       }
-    }
+    };
+
+    loadLinks();
   }, []);
 
-  // Save data to localStorage when it changes
-  useEffect(() => {
-    if (links.length > 0) {
-      localStorage.setItem('linkItems', JSON.stringify(links));
-    }
-  }, [links]);
+  // Remove the automatic save effect since we're using hybrid storage for individual operations
 
   // Get unique categories
   const categories = ['전체', ...Array.from(new Set(links.flatMap(link => link.categories)))];
@@ -71,7 +69,7 @@ export const useLinksLogic = (): LinksLogic => {
   });
 
   // Add new link
-  const addLink = useCallback((title: string, url: string, description: string, categories: string[]) => {
+  const addLink = useCallback(async (title: string, url: string, description: string, categories: string[]) => {
     if (!title.trim() || !url.trim()) return;
 
     const newLink: LinkItem = {
@@ -85,18 +83,39 @@ export const useLinksLogic = (): LinksLogic => {
     };
 
     setLinks(prev => [...prev, newLink]);
+
+    // Save using hybrid storage
+    try {
+      await hybridStorage.saveLink(newLink);
+    } catch (error) {
+      console.error('링크 저장 실패:', error);
+    }
   }, []);
 
   // Update existing link
-  const updateLink = useCallback((id: string, updates: Partial<Omit<LinkItem, 'id' | 'createdAt'>>) => {
+  const updateLink = useCallback(async (id: string, updates: Partial<Omit<LinkItem, 'id' | 'createdAt'>>) => {
     setLinks(prev => prev.map(link =>
       link.id === id ? { ...link, ...updates } : link
     ));
+
+    // Save using hybrid storage
+    try {
+      await hybridStorage.updateLink(id, updates);
+    } catch (error) {
+      console.error('링크 업데이트 실패:', error);
+    }
   }, []);
 
   // Delete link
-  const deleteLink = useCallback((id: string) => {
+  const deleteLink = useCallback(async (id: string) => {
     setLinks(prev => prev.filter(link => link.id !== id));
+
+    // Save using hybrid storage
+    try {
+      await hybridStorage.deleteLink(id);
+    } catch (error) {
+      console.error('링크 삭제 실패:', error);
+    }
   }, []);
 
   // Toggle read status

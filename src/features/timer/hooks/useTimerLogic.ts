@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAudio } from '../../../adapters/react/useAudio';
+import { hybridStorage } from '../../../utils/hybridStorage';
 
 export interface TimerState {
   timeLeft: number;
@@ -139,10 +140,12 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
       thoughts: reflection.thoughts,
     };
 
-    // Save to localStorage
-    const existingCycles = JSON.parse(localStorage.getItem('focusCycles') || '[]');
-    const updatedCycles = [...existingCycles, newCycle];
-    localStorage.setItem('focusCycles', JSON.stringify(updatedCycles));
+    // Save using hybrid storage
+    try {
+      await hybridStorage.saveFocusCycle(newCycle);
+    } catch (error) {
+      console.error('포커스 사이클 저장 실패:', error);
+    }
 
     // Update cycle history state
     if (addCycle) {
