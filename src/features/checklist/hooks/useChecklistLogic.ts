@@ -11,12 +11,18 @@ export interface SectionExpansionState {
   morning: boolean;
   lunch: boolean;
   evening: boolean;
+  reflection: boolean;
+}
+
+export interface PreviewState {
+  [key: string]: boolean; // sectionKey_questionIndex: boolean
 }
 
 export interface ChecklistLogic {
   // State
   checklistData: Record<string, ChecklistData>;
   expandedSections: SectionExpansionState;
+  previewState: PreviewState;
   editMode: boolean;
   hasData: boolean;
   storageInfo: any;
@@ -24,6 +30,7 @@ export interface ChecklistLogic {
   // Actions
   toggleSection: (sectionKey: string) => void;
   updateAnswer: (date: string, sectionKey: string, questionIndex: number, value: string) => void;
+  togglePreview: (sectionKey: string, questionIndex: number) => void;
   toggleEditMode: () => void;
   completeEdit: () => void;
   cancelEdit: () => void;
@@ -36,7 +43,9 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     morning: true,
     lunch: false,
     evening: false,
+    reflection: false,
   });
+  const [previewState, setPreviewState] = useState<PreviewState>({});
   const [editMode, setEditMode] = useState(false);
 
   // Storage info
@@ -76,6 +85,15 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
           }
         }
       }
+    }));
+  }, []);
+
+  // Toggle preview
+  const togglePreview = useCallback((sectionKey: string, questionIndex: number) => {
+    const key = `${sectionKey}_${questionIndex}`;
+    setPreviewState(prev => ({
+      ...prev,
+      [key]: !prev[key]
     }));
   }, []);
 
@@ -137,6 +155,7 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     // State
     checklistData,
     expandedSections,
+    previewState,
     editMode,
     hasData,
     storageInfo,
@@ -144,6 +163,7 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     // Actions
     toggleSection,
     updateAnswer,
+    togglePreview,
     toggleEditMode,
     completeEdit,
     cancelEdit,
