@@ -1,0 +1,128 @@
+import React, { useState, useEffect } from 'react';
+import { AppProvider } from './contexts/AppContext';
+import { Sidebar } from './components/Sidebar';
+import { DateNavigationRefactored } from './components/DateNavigationRefactored';
+import { TimerFeature } from './features/timer/TimerFeature';
+import { DailyChecklistFeature } from './features/checklist/DailyChecklistFeature';
+import StorageIndicator from './components/StorageIndicator';
+
+type ActiveSection = 'timer' | 'checklist';
+
+const AppContent: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeSection, setActiveSection] = useState<ActiveSection>('timer');
+
+  // URL 쿼리파라미터에서 섹션 읽기
+  useEffect(() => {
+    const updateSectionFromURL = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const section = urlParams.get('section') as ActiveSection;
+      if (section && (section === 'timer' || section === 'checklist')) {
+        setActiveSection(section);
+      }
+    };
+
+    // 초기 로드 시 URL에서 섹션 읽기
+    updateSectionFromURL();
+
+    // 브라우저 뒤로가기/앞으로가기 지원
+    window.addEventListener('popstate', updateSectionFromURL);
+
+    return () => {
+      window.removeEventListener('popstate', updateSectionFromURL);
+    };
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  const handleSectionChange = (section: ActiveSection) => {
+    setActiveSection(section);
+
+    // URL 쿼리파라미터 업데이트
+    const url = new URL(window.location.href);
+    url.searchParams.set('section', section);
+    window.history.pushState({}, '', url.toString());
+  };
+
+  // 초기 로드 시 기본 섹션 설정 (URL에 섹션이 없는 경우)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.get('section')) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('section', 'timer');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
+  // 페이지 제목을 활성 섹션에 따라 업데이트
+  useEffect(() => {
+    const sectionTitle = activeSection === 'timer' ? '10분 집중 타이머' : '일일 점검 시스템';
+    document.title = `${sectionTitle} - Timer App`;
+  }, [activeSection]);
+
+
+  const clearAllData = async () => {
+    if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
+      />
+
+      {/* Main content area */}
+      <div className={`transition-all duration-300 ${isSidebarOpen
+        ? isSidebarCollapsed
+          ? 'lg:ml-16'
+          : 'lg:ml-60'
+        : 'ml-0'
+        }`}>
+        <DateNavigationRefactored
+          onClearAllData={clearAllData}
+        />
+
+        <div className="p-6">
+          {activeSection === 'timer' && (
+            <div className="max-w-6xl mx-auto">
+              <TimerFeature />
+            </div>
+          )}
+
+          {activeSection === 'checklist' && (
+            <div className="max-w-4xl mx-auto">
+              <DailyChecklistFeature />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <StorageIndicator />
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
+  );
+};
+
+export default App;

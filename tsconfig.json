@@ -19,7 +19,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    
+
     /* JavaScript compatibility */
     "allowJs": true,
     "checkJs": false,
@@ -35,6 +35,5 @@
       "@/hooks/*": ["src/hooks/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }
