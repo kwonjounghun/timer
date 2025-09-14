@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HelpCircle, X, Code, Bold, Italic, List, Hash } from 'lucide-react';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface MarkdownHelpProps {
   className?: string;

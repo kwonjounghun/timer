@@ -22,32 +22,44 @@ const STORAGE_KEY = 'conceptmap-links';
 export const useConceptMapLogic = (): ConceptMapLogic => {
   const [conceptMaps, setConceptMaps] = useState<ConceptMapItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 로컬 스토리지에서 데이터 로드
   useEffect(() => {
     try {
+      console.log('Loading concept maps from localStorage...');
       const stored = localStorage.getItem(STORAGE_KEY);
+      console.log('Raw stored data:', stored);
+
       if (stored) {
         const parsed = JSON.parse(stored);
+        console.log('Parsed data:', parsed);
+
         const conceptMapsWithDates = parsed.map((item: any) => ({
           ...item,
           createdAt: new Date(item.createdAt)
         }));
         setConceptMaps(conceptMapsWithDates);
+        console.log('Concept maps loaded from localStorage:', conceptMapsWithDates.length, 'items');
+      } else {
+        console.log('No concept maps found in localStorage');
       }
     } catch (error) {
       console.error('Failed to load concept map data:', error);
+    } finally {
+      setIsInitialized(true);
     }
   }, []);
 
-  // 데이터가 변경될 때마다 로컬 스토리지에 저장
-  useEffect(() => {
+  // 수동으로 저장하는 함수
+  const saveToStorage = useCallback((data: ConceptMapItem[]) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(conceptMaps));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      console.log('Concept maps saved to localStorage:', data.length, 'items');
     } catch (error) {
       console.error('Failed to save concept map data:', error);
     }
-  }, [conceptMaps]);
+  }, []);
 
   // 컨셉맵 추가
   const addConceptMap = useCallback((title: string, url: string) => {
@@ -57,22 +69,34 @@ export const useConceptMapLogic = (): ConceptMapLogic => {
       url: url.trim(),
       createdAt: new Date()
     };
-    setConceptMaps(prev => [...prev, newConceptMap]);
-  }, []);
+    setConceptMaps(prev => {
+      const newList = [...prev, newConceptMap];
+      saveToStorage(newList);
+      return newList;
+    });
+  }, [saveToStorage]);
 
   // 컨셉맵 수정
   const updateConceptMap = useCallback((id: string, updates: Partial<Omit<ConceptMapItem, 'id' | 'createdAt'>>) => {
-    setConceptMaps(prev => prev.map(item =>
-      item.id === id
-        ? { ...item, ...updates }
-        : item
-    ));
-  }, []);
+    setConceptMaps(prev => {
+      const newList = prev.map(item =>
+        item.id === id
+          ? { ...item, ...updates }
+          : item
+      );
+      saveToStorage(newList);
+      return newList;
+    });
+  }, [saveToStorage]);
 
   // 컨셉맵 삭제
   const deleteConceptMap = useCallback((id: string) => {
-    setConceptMaps(prev => prev.filter(item => item.id !== id));
-  }, []);
+    setConceptMaps(prev => {
+      const newList = prev.filter(item => item.id !== id);
+      saveToStorage(newList);
+      return newList;
+    });
+  }, [saveToStorage]);
 
   // 검색 필터링
   const filteredConceptMaps = conceptMaps.filter(item =>
