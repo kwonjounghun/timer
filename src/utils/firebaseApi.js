@@ -9,7 +9,9 @@ import {
   where,
   orderBy,
   limit,
-  serverTimestamp
+  serverTimestamp,
+  getDoc,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -103,7 +105,7 @@ export const getAllFocusCycles = async (limitCount = 100) => {
 };
 
 /**
- * 포커스 사이클 업데이트
+ * 포커스 사이클 업데이트 (문서가 없으면 생성)
  * @param {string} cycleId - 사이클 ID
  * @param {Object} updateData - 업데이트할 데이터
  * @returns {Promise<void>}
@@ -111,10 +113,25 @@ export const getAllFocusCycles = async (limitCount = 100) => {
 export const updateFocusCycle = async (cycleId, updateData) => {
   try {
     const cycleRef = doc(db, COLLECTIONS.FOCUS_CYCLES, cycleId);
-    await updateDoc(cycleRef, {
-      ...updateData,
-      updatedAt: serverTimestamp()
-    });
+
+    // 문서 존재 여부 확인
+    const docSnap = await getDoc(cycleRef);
+
+    if (docSnap.exists()) {
+      // 문서가 존재하면 업데이트
+      await updateDoc(cycleRef, {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      // 문서가 존재하지 않으면 새로 생성
+      console.warn(`포커스 사이클 문서 ${cycleId}가 존재하지 않습니다. 새로 생성합니다.`);
+      await setDoc(cycleRef, {
+        ...updateData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
   } catch (error) {
     console.error('포커스 사이클 업데이트 실패:', error);
     throw error;
@@ -366,7 +383,7 @@ export const getLinks = async () => {
 };
 
 /**
- * 링크 업데이트
+ * 링크 업데이트 (문서가 없으면 생성)
  * @param {string} linkId - 링크 ID
  * @param {Object} updateData - 업데이트할 데이터
  * @returns {Promise<void>}
@@ -374,10 +391,25 @@ export const getLinks = async () => {
 export const updateLink = async (linkId, updateData) => {
   try {
     const linkRef = doc(db, COLLECTIONS.LINKS, linkId);
-    await updateDoc(linkRef, {
-      ...updateData,
-      updatedAt: serverTimestamp()
-    });
+
+    // 문서 존재 여부 확인
+    const docSnap = await getDoc(linkRef);
+
+    if (docSnap.exists()) {
+      // 문서가 존재하면 업데이트
+      await updateDoc(linkRef, {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      // 문서가 존재하지 않으면 새로 생성
+      console.warn(`링크 문서 ${linkId}가 존재하지 않습니다. 새로 생성합니다.`);
+      await setDoc(linkRef, {
+        ...updateData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
   } catch (error) {
     console.error('링크 업데이트 실패:', error);
     throw error;
@@ -436,7 +468,7 @@ export const getConceptMaps = async () => {
 };
 
 /**
- * 컨셉맵 업데이트
+ * 컨셉맵 업데이트 (문서가 없으면 생성)
  * @param {string} conceptMapId - 컨셉맵 ID
  * @param {Object} updateData - 업데이트할 데이터
  * @returns {Promise<void>}
@@ -444,10 +476,25 @@ export const getConceptMaps = async () => {
 export const updateConceptMap = async (conceptMapId, updateData) => {
   try {
     const conceptMapRef = doc(db, COLLECTIONS.CONCEPTMAP, conceptMapId);
-    await updateDoc(conceptMapRef, {
-      ...updateData,
-      updatedAt: serverTimestamp()
-    });
+
+    // 문서 존재 여부 확인
+    const docSnap = await getDoc(conceptMapRef);
+
+    if (docSnap.exists()) {
+      // 문서가 존재하면 업데이트
+      await updateDoc(conceptMapRef, {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      // 문서가 존재하지 않으면 새로 생성
+      console.warn(`컨셉맵 문서 ${conceptMapId}가 존재하지 않습니다. 새로 생성합니다.`);
+      await setDoc(conceptMapRef, {
+        ...updateData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
   } catch (error) {
     console.error('컨셉맵 업데이트 실패:', error);
     throw error;
@@ -506,7 +553,7 @@ export const getTodos = async () => {
 };
 
 /**
- * 할일 업데이트
+ * 할일 업데이트 (문서가 없으면 생성)
  * @param {string} todoId - 할일 ID
  * @param {Object} updateData - 업데이트할 데이터
  * @returns {Promise<void>}
@@ -514,10 +561,25 @@ export const getTodos = async () => {
 export const updateTodo = async (todoId, updateData) => {
   try {
     const todoRef = doc(db, COLLECTIONS.TODOS, todoId);
-    await updateDoc(todoRef, {
-      ...updateData,
-      updatedAt: serverTimestamp()
-    });
+
+    // 문서 존재 여부 확인
+    const docSnap = await getDoc(todoRef);
+
+    if (docSnap.exists()) {
+      // 문서가 존재하면 업데이트
+      await updateDoc(todoRef, {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      // 문서가 존재하지 않으면 새로 생성
+      console.warn(`할일 문서 ${todoId}가 존재하지 않습니다. 새로 생성합니다.`);
+      await setDoc(todoRef, {
+        ...updateData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
   } catch (error) {
     console.error('할일 업데이트 실패:', error);
     throw error;
