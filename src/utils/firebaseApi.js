@@ -143,12 +143,26 @@ export const deleteFocusCycle = async (cycleId) => {
  */
 export const saveDailyChecklist = async (checklistData) => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTIONS.DAILY_CHECKLISTS), {
-      ...checklistData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-    return docRef.id;
+    // 같은 날짜의 기존 체크리스트 찾기
+    const existingChecklist = await getDailyChecklistByDate(checklistData.date);
+
+    if (existingChecklist) {
+      // 기존 데이터 업데이트
+      const docRef = doc(db, COLLECTIONS.DAILY_CHECKLISTS, existingChecklist.id);
+      await updateDoc(docRef, {
+        ...checklistData,
+        updatedAt: serverTimestamp()
+      });
+      return existingChecklist.id;
+    } else {
+      // 새로운 데이터 생성
+      const docRef = await addDoc(collection(db, COLLECTIONS.DAILY_CHECKLISTS), {
+        ...checklistData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      return docRef.id;
+    }
   } catch (error) {
     console.error('일일 체크리스트 저장 실패:', error);
     throw error;

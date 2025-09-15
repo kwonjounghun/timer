@@ -145,18 +145,34 @@ const localStorageApi = {
     return true;
   },
 
-  // 일일 체크리스트 저장
+  // 일일 체크리스트 저장 (기존 데이터가 있으면 업데이트, 없으면 새로 생성)
   saveDailyChecklist: async (checklistData) => {
     const checklists = localStorageUtils.getItem(STORAGE_KEYS.DAILY_CHECKLISTS) || [];
-    const newChecklist = {
-      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...checklistData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    checklists.push(newChecklist);
-    localStorageUtils.setItem(STORAGE_KEYS.DAILY_CHECKLISTS, checklists);
-    return newChecklist.id;
+
+    // 같은 날짜의 기존 체크리스트 찾기
+    const existingIndex = checklists.findIndex(checklist => checklist.date === checklistData.date);
+
+    if (existingIndex !== -1) {
+      // 기존 데이터 업데이트
+      checklists[existingIndex] = {
+        ...checklists[existingIndex],
+        ...checklistData,
+        updatedAt: new Date().toISOString()
+      };
+      localStorageUtils.setItem(STORAGE_KEYS.DAILY_CHECKLISTS, checklists);
+      return checklists[existingIndex].id;
+    } else {
+      // 새로운 데이터 생성
+      const newChecklist = {
+        id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ...checklistData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      checklists.push(newChecklist);
+      localStorageUtils.setItem(STORAGE_KEYS.DAILY_CHECKLISTS, checklists);
+      return newChecklist.id;
+    }
   },
 
   // 날짜별 일일 체크리스트 조회
