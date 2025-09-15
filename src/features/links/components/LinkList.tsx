@@ -286,9 +286,15 @@ export const LinkList: React.FC<LinkListProps> = ({
                       </p>
                     )}
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>생성: {new Date(link.createdAt).toLocaleDateString('ko-KR')}</span>
+                      <span>생성: {(() => {
+                        const date = new Date(link.createdAt);
+                        return isNaN(date.getTime()) ? '날짜 오류' : date.toLocaleDateString('ko-KR');
+                      })()}</span>
                       {link.readAt && (
-                        <span>읽음: {new Date(link.readAt).toLocaleDateString('ko-KR')}</span>
+                        <span>읽음: {(() => {
+                          const date = new Date(link.readAt);
+                          return isNaN(date.getTime()) ? '날짜 오류' : date.toLocaleDateString('ko-KR');
+                        })()}</span>
                       )}
                     </div>
                   </div>

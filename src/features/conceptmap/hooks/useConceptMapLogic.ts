@@ -33,10 +33,13 @@ export const useConceptMapLogic = (): ConceptMapLogic => {
         const conceptMaps = await hybridStorage.getConceptMaps();
         console.log('Raw concept maps data:', conceptMaps);
 
-        const conceptMapsWithDates = conceptMaps.map((item: any) => ({
-          ...item,
-          createdAt: new Date(item.createdAt)
-        }));
+        const conceptMapsWithDates = conceptMaps.map((item: any) => {
+          const createdAt = new Date(item.createdAt);
+          return {
+            ...item,
+            createdAt: isNaN(createdAt.getTime()) ? new Date() : createdAt
+          };
+        });
         setConceptMaps(conceptMapsWithDates);
         console.log('Concept maps loaded from hybrid storage:', conceptMapsWithDates.length, 'items');
       } catch (error) {

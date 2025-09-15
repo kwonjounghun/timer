@@ -82,7 +82,13 @@ export const TodoList: React.FC<TodoListProps> = ({
     if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     }
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    const aTime = new Date(a.createdAt).getTime();
+    const bTime = new Date(b.createdAt).getTime();
+    // 유효하지 않은 날짜가 있으면 뒤로 정렬
+    if (isNaN(aTime) && isNaN(bTime)) return 0;
+    if (isNaN(aTime)) return 1;
+    if (isNaN(bTime)) return -1;
+    return aTime - bTime;
   });
 
   if (todos.length === 0) {
@@ -225,7 +231,10 @@ export const TodoList: React.FC<TodoListProps> = ({
                     <div className="flex items-center gap-2 mb-1">
                       {todo.completed && (
                         <span className="text-xs text-gray-500">
-                          완료: {new Date(todo.completedAt!).toLocaleDateString('ko-KR')}
+                          완료: {(() => {
+                            const date = new Date(todo.completedAt!);
+                            return isNaN(date.getTime()) ? '날짜 오류' : date.toLocaleDateString('ko-KR');
+                          })()}
                         </span>
                       )}
                     </div>
@@ -256,7 +265,10 @@ export const TodoList: React.FC<TodoListProps> = ({
                     </div>
 
                     <p className="text-xs text-gray-400 mt-1">
-                      생성: {new Date(todo.createdAt).toLocaleDateString('ko-KR')}
+                      생성: {(() => {
+                        const date = new Date(todo.createdAt);
+                        return isNaN(date.getTime()) ? '날짜 오류' : date.toLocaleDateString('ko-KR');
+                      })()}
                     </p>
                   </div>
 

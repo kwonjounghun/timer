@@ -117,7 +117,15 @@ const localStorageApi = {
   getAllFocusCycles: async (limit = 100) => {
     const cycles = localStorageUtils.getItem(STORAGE_KEYS.FOCUS_CYCLES) || [];
     return cycles
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .sort((a, b) => {
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
+        // 유효하지 않은 날짜가 있으면 뒤로 정렬
+        if (isNaN(aTime) && isNaN(bTime)) return 0;
+        if (isNaN(aTime)) return 1;
+        if (isNaN(bTime)) return -1;
+        return bTime - aTime;
+      })
       .slice(0, limit);
   },
 
@@ -201,7 +209,15 @@ const localStorageApi = {
   getAllDailyChecklists: async (limit = 100) => {
     const checklists = localStorageUtils.getItem(STORAGE_KEYS.DAILY_CHECKLISTS) || [];
     return checklists
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .sort((a, b) => {
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
+        // 유효하지 않은 날짜가 있으면 뒤로 정렬
+        if (isNaN(aTime) && isNaN(bTime)) return 0;
+        if (isNaN(aTime)) return 1;
+        if (isNaN(bTime)) return -1;
+        return bTime - aTime;
+      })
       .slice(0, limit);
   },
 

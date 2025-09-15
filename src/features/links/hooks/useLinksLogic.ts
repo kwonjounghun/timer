@@ -37,11 +37,16 @@ export const useLinksLogic = (): LinksLogic => {
     const loadLinks = async () => {
       try {
         const links = await hybridStorage.getLinks();
-        const parsedLinks = links.map((link: any) => ({
-          ...link,
-          createdAt: new Date(link.createdAt),
-          readAt: link.readAt ? new Date(link.readAt) : undefined,
-        }));
+        const parsedLinks = links.map((link: any) => {
+          const createdAt = new Date(link.createdAt);
+          const readAt = link.readAt ? new Date(link.readAt) : undefined;
+
+          return {
+            ...link,
+            createdAt: isNaN(createdAt.getTime()) ? new Date() : createdAt,
+            readAt: readAt && !isNaN(readAt.getTime()) ? readAt : undefined,
+          };
+        });
         setLinks(parsedLinks);
       } catch (error) {
         console.error('Failed to load links:', error);

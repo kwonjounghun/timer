@@ -29,14 +29,19 @@ export const useTodoLogic = (): TodoLogic => {
     const loadTodos = async () => {
       try {
         const todos = await hybridStorage.getTodos();
-        const parsedTodos = todos.map((todo: any) => ({
-          ...todo,
-          // 기존 데이터와의 호환성을 위한 마이그레이션
-          title: todo.title || todo.text || '제목 없음',
-          content: todo.content || '',
-          createdAt: new Date(todo.createdAt),
-          completedAt: todo.completedAt ? new Date(todo.completedAt) : undefined,
-        }));
+        const parsedTodos = todos.map((todo: any) => {
+          const createdAt = new Date(todo.createdAt);
+          const completedAt = todo.completedAt ? new Date(todo.completedAt) : undefined;
+
+          return {
+            ...todo,
+            // 기존 데이터와의 호환성을 위한 마이그레이션
+            title: todo.title || todo.text || '제목 없음',
+            content: todo.content || '',
+            createdAt: isNaN(createdAt.getTime()) ? new Date() : createdAt,
+            completedAt: completedAt && !isNaN(completedAt.getTime()) ? completedAt : undefined,
+          };
+        });
         setTodos(parsedTodos);
       } catch (error) {
         console.error('Failed to load todos:', error);
