@@ -11,6 +11,7 @@ import { ConceptMapFeature } from './features/conceptmap/ConceptMapFeature';
 import StorageIndicator from './components/StorageIndicator';
 import LoginForm from './components/LoginForm';
 import UnauthorizedView from './components/UnauthorizedView';
+import ViewerModeIndicator from './components/ViewerModeIndicator';
 import { getStorageType } from './utils/storageType';
 
 type ActiveSection = 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap';
@@ -104,83 +105,67 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // 로컬스토리지 모드이거나 Firebase 모드에서 인증된 사용자인 경우
-  if (isLocalStorageMode || (storageType === 'firebase' && isAuthorized)) {
-    return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onToggle={toggleSidebar}
-          activeSection={activeSection}
-          onSectionChange={handleSectionChange}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={toggleSidebarCollapse}
-        />
-
-        {/* Main content area */}
-        <div className={`transition-all duration-300 ${isSidebarOpen
-          ? isSidebarCollapsed
-            ? 'lg:ml-16'
-            : 'lg:ml-60'
-          : 'ml-0'
-          }`}>
-          <DateNavigationRefactored
-            onClearAllData={clearAllData}
-          />
-
-          <div className="p-6">
-            {activeSection === 'timer' && (
-              <div className="max-w-6xl mx-auto">
-                <TimerFeature />
-              </div>
-            )}
-
-            {activeSection === 'checklist' && (
-              <div className="max-w-4xl mx-auto">
-                <DailyChecklistFeature />
-              </div>
-            )}
-
-            {activeSection === 'todo' && (
-              <div className="max-w-4xl mx-auto">
-                <TodoFeature />
-              </div>
-            )}
-
-            {activeSection === 'links' && (
-              <div className="max-w-4xl mx-auto">
-                <LinksFeature />
-              </div>
-            )}
-
-            {activeSection === 'conceptmap' && (
-              <ConceptMapFeature />
-            )}
-          </div>
-        </div>
-
-        <StorageIndicator />
-      </div>
-    );
-  }
-
-  // Firebase 모드에서 로그인하지 않은 경우
-  if (storageType === 'firebase' && !user) {
-    return <LoginForm />;
-  }
-
   // Firebase 모드에서 로그인했지만 권한이 없는 경우
   if (storageType === 'firebase' && user && !isAuthorized) {
     return <UnauthorizedView />;
   }
 
-  // 기본 로딩 화면
+  // 기본 앱 화면 (뷰어 모드로 시작, 로그인 시 편집 권한 부여)
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">초기화 중...</p>
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
+      />
+
+      {/* Main content area */}
+      <div className={`transition-all duration-300 ${isSidebarOpen
+        ? isSidebarCollapsed
+          ? 'lg:ml-16'
+          : 'lg:ml-60'
+        : 'ml-0'
+        }`}>
+        <DateNavigationRefactored
+          onClearAllData={clearAllData}
+        />
+
+        <div className="p-6">
+          {activeSection === 'timer' && (
+            <div className="max-w-6xl mx-auto">
+              <TimerFeature />
+            </div>
+          )}
+
+          {activeSection === 'checklist' && (
+            <div className="max-w-4xl mx-auto">
+              <DailyChecklistFeature />
+            </div>
+          )}
+
+          {activeSection === 'todo' && (
+            <div className="max-w-4xl mx-auto">
+              <TodoFeature />
+            </div>
+          )}
+
+          {activeSection === 'links' && (
+            <div className="max-w-4xl mx-auto">
+              <LinksFeature />
+            </div>
+          )}
+
+          {activeSection === 'conceptmap' && (
+            <ConceptMapFeature />
+          )}
+        </div>
       </div>
+
+      <StorageIndicator />
+      <ViewerModeIndicator />
     </div>
   );
 };

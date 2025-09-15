@@ -46,7 +46,7 @@ const checkPermission = (operation) => {
   if (storageType === 'firebase') {
     const user = auth.currentUser;
     if (!user) {
-      console.warn(`${operation} 권한이 없습니다: 로그인이 필요합니다.`);
+      console.warn(`${operation} 권한이 없습니다: 뷰어 모드에서는 조회만 가능합니다.`);
       return false;
     }
     return true;
@@ -313,7 +313,7 @@ export const hybridStorage = {
   // 포커스 사이클 저장
   saveFocusCycle: async (cycleData) => {
     if (!checkPermission('포커스 사이클 저장')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 저장할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -347,7 +347,7 @@ export const hybridStorage = {
   // 포커스 사이클 업데이트
   updateFocusCycle: async (cycleId, updateData) => {
     if (!checkPermission('포커스 사이클 수정')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -361,7 +361,7 @@ export const hybridStorage = {
   // 포커스 사이클 삭제
   deleteFocusCycle: async (cycleId) => {
     if (!checkPermission('포커스 사이클 삭제')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -375,7 +375,7 @@ export const hybridStorage = {
   // 일일 체크리스트 저장
   saveDailyChecklist: async (checklistData) => {
     if (!checkPermission('일일 체크리스트 저장')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -399,7 +399,7 @@ export const hybridStorage = {
   // 일일 체크리스트 업데이트
   updateDailyChecklist: async (checklistId, updateData) => {
     if (!checkPermission('일일 체크리스트 수정')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -423,7 +423,7 @@ export const hybridStorage = {
   // 링크 관리
   saveLink: async (linkData) => {
     if (!checkPermission('링크 저장')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -445,7 +445,7 @@ export const hybridStorage = {
 
   updateLink: async (linkId, updateData) => {
     if (!checkPermission('링크 수정')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -458,7 +458,7 @@ export const hybridStorage = {
 
   deleteLink: async (linkId) => {
     if (!checkPermission('링크 삭제')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -472,7 +472,7 @@ export const hybridStorage = {
   // 컨셉맵 관리
   saveConceptMap: async (conceptMapData) => {
     if (!checkPermission('컨셉맵 저장')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -494,7 +494,7 @@ export const hybridStorage = {
 
   updateConceptMap: async (conceptMapId, updateData) => {
     if (!checkPermission('컨셉맵 수정')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -507,7 +507,7 @@ export const hybridStorage = {
 
   deleteConceptMap: async (conceptMapId) => {
     if (!checkPermission('컨셉맵 삭제')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -521,7 +521,7 @@ export const hybridStorage = {
   // 할일 관리
   saveTodo: async (todoData) => {
     if (!checkPermission('할일 저장')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -543,7 +543,7 @@ export const hybridStorage = {
 
   updateTodo: async (todoId, updateData) => {
     if (!checkPermission('할일 수정')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
@@ -556,7 +556,7 @@ export const hybridStorage = {
 
   deleteTodo: async (todoId) => {
     if (!checkPermission('할일 삭제')) {
-      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+      throw new Error('뷰어 모드에서는 편집할 수 없습니다. 로그인하면 편집 가능합니다.');
     }
 
     const storageType = getStorageType();
