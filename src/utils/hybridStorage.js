@@ -97,7 +97,8 @@ const localStorageApi = {
   saveFocusCycle: async (cycleData) => {
     const cycles = localStorageUtils.getItem(STORAGE_KEYS.FOCUS_CYCLES) || [];
     const newCycle = {
-      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      // ID가 이미 있으면 사용, 없으면 새로 생성
+      id: cycleData.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...cycleData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -225,7 +226,8 @@ const localStorageApi = {
   saveLink: async (linkData) => {
     const links = localStorageUtils.getItem(STORAGE_KEYS.LINKS) || [];
     const newLink = {
-      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      // ID가 이미 있으면 사용, 없으면 새로 생성
+      id: linkData.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...linkData,
       createdAt: new Date(),
       readAt: linkData.isRead ? new Date() : undefined
@@ -265,7 +267,8 @@ const localStorageApi = {
   saveConceptMap: async (conceptMapData) => {
     const conceptMaps = localStorageUtils.getItem(STORAGE_KEYS.CONCEPTMAP) || [];
     const newConceptMap = {
-      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      // ID가 이미 있으면 사용, 없으면 새로 생성
+      id: conceptMapData.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...conceptMapData,
       createdAt: new Date()
     };
@@ -303,9 +306,10 @@ const localStorageApi = {
   saveTodo: async (todoData) => {
     const todos = localStorageUtils.getItem(STORAGE_KEYS.TODOS) || [];
     const newTodo = {
-      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      // ID가 이미 있으면 사용, 없으면 새로 생성
+      id: todoData.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...todoData,
-      createdAt: new Date(),
+      createdAt: todoData.createdAt || new Date(),
       updatedAt: new Date()
     };
     todos.push(newTodo);
