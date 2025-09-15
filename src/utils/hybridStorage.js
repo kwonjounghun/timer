@@ -1,5 +1,6 @@
 import { getStorageType } from './storageType';
-import { 
+import { auth } from '../config/firebase';
+import {
   saveFocusCycle as firebaseSaveFocusCycle,
   getFocusCyclesByDate as firebaseGetFocusCyclesByDate,
   getAllFocusCycles as firebaseGetAllFocusCycles,
@@ -30,6 +31,28 @@ const STORAGE_KEYS = {
   LINKS: 'linkItems',
   CONCEPTMAP: 'conceptmap-links',
   TODOS: 'todoItems'
+};
+
+// 권한 확인 함수
+const checkPermission = (operation) => {
+  const storageType = getStorageType();
+
+  // 로컬스토리지 모드에서는 항상 허용
+  if (storageType === 'localStorage') {
+    return true;
+  }
+
+  // Firebase 모드에서는 인증된 사용자만 허용
+  if (storageType === 'firebase') {
+    const user = auth.currentUser;
+    if (!user) {
+      console.warn(`${operation} 권한이 없습니다: 로그인이 필요합니다.`);
+      return false;
+    }
+    return true;
+  }
+
+  return false;
 };
 
 // 로컬스토리지 유틸리티 함수들
@@ -289,6 +312,10 @@ const localStorageApi = {
 export const hybridStorage = {
   // 포커스 사이클 저장
   saveFocusCycle: async (cycleData) => {
+    if (!checkPermission('포커스 사이클 저장')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseSaveFocusCycle(cycleData);
@@ -319,6 +346,10 @@ export const hybridStorage = {
 
   // 포커스 사이클 업데이트
   updateFocusCycle: async (cycleId, updateData) => {
+    if (!checkPermission('포커스 사이클 수정')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseUpdateFocusCycle(cycleId, updateData);
@@ -329,6 +360,10 @@ export const hybridStorage = {
 
   // 포커스 사이클 삭제
   deleteFocusCycle: async (cycleId) => {
+    if (!checkPermission('포커스 사이클 삭제')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseDeleteFocusCycle(cycleId);
@@ -339,6 +374,10 @@ export const hybridStorage = {
 
   // 일일 체크리스트 저장
   saveDailyChecklist: async (checklistData) => {
+    if (!checkPermission('일일 체크리스트 저장')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseSaveDailyChecklist(checklistData);
@@ -359,6 +398,10 @@ export const hybridStorage = {
 
   // 일일 체크리스트 업데이트
   updateDailyChecklist: async (checklistId, updateData) => {
+    if (!checkPermission('일일 체크리스트 수정')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseUpdateDailyChecklist(checklistId, updateData);
@@ -379,6 +422,10 @@ export const hybridStorage = {
 
   // 링크 관리
   saveLink: async (linkData) => {
+    if (!checkPermission('링크 저장')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseSaveLink(linkData);
@@ -397,6 +444,10 @@ export const hybridStorage = {
   },
 
   updateLink: async (linkId, updateData) => {
+    if (!checkPermission('링크 수정')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseUpdateLink(linkId, updateData);
@@ -406,6 +457,10 @@ export const hybridStorage = {
   },
 
   deleteLink: async (linkId) => {
+    if (!checkPermission('링크 삭제')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseDeleteLink(linkId);
@@ -416,6 +471,10 @@ export const hybridStorage = {
 
   // 컨셉맵 관리
   saveConceptMap: async (conceptMapData) => {
+    if (!checkPermission('컨셉맵 저장')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseSaveConceptMap(conceptMapData);
@@ -434,6 +493,10 @@ export const hybridStorage = {
   },
 
   updateConceptMap: async (conceptMapId, updateData) => {
+    if (!checkPermission('컨셉맵 수정')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseUpdateConceptMap(conceptMapId, updateData);
@@ -443,6 +506,10 @@ export const hybridStorage = {
   },
 
   deleteConceptMap: async (conceptMapId) => {
+    if (!checkPermission('컨셉맵 삭제')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseDeleteConceptMap(conceptMapId);
@@ -453,6 +520,10 @@ export const hybridStorage = {
 
   // 할일 관리
   saveTodo: async (todoData) => {
+    if (!checkPermission('할일 저장')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseSaveTodo(todoData);
@@ -471,6 +542,10 @@ export const hybridStorage = {
   },
 
   updateTodo: async (todoId, updateData) => {
+    if (!checkPermission('할일 수정')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseUpdateTodo(todoId, updateData);
@@ -480,6 +555,10 @@ export const hybridStorage = {
   },
 
   deleteTodo: async (todoId) => {
+    if (!checkPermission('할일 삭제')) {
+      throw new Error('권한이 없습니다. 로그인이 필요합니다.');
+    }
+
     const storageType = getStorageType();
     if (storageType === 'firebase') {
       return await firebaseDeleteTodo(todoId);

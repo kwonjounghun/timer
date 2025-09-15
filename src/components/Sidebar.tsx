@@ -1,4 +1,6 @@
-import { Timer, Calendar, CheckSquare, BookOpen, Network, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Timer, Calendar, CheckSquare, BookOpen, Network, Menu, X, ChevronLeft, ChevronRight, LogOut, User } from 'lucide-react';
+import { useAuthContext } from '../contexts/AuthContext';
+import { getStorageType } from '../utils/storageType';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -17,6 +19,9 @@ export const Sidebar = ({
   isCollapsed = false,
   onToggleCollapse
 }: SidebarProps) => {
+  const { user, logout, isAuthorized } = useAuthContext();
+  const storageType = getStorageType();
+  const isFirebaseMode = storageType === 'firebase';
   const menuItems = [
     {
       id: 'todo' as const,
@@ -153,12 +158,46 @@ export const Sidebar = ({
           </nav>
         </div>
 
-        {/* 하단 정보 */}
-        {!isCollapsed && (
+        {/* 하단 사용자 정보 및 로그아웃 */}
+        {!isCollapsed && isFirebaseMode && user && (
+          <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center space-x-3 mb-3">
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || '사용자'}
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <User size={16} className="text-white" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user.displayName || '사용자'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut size={16} />
+              <span>로그아웃</span>
+            </button>
+          </div>
+        )}
+
+        {/* 로컬스토리지 모드일 때 하단 정보 */}
+        {!isCollapsed && !isFirebaseMode && (
           <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 bg-gray-50">
             <div className="text-xs text-gray-500 text-center">
               <p className="mb-1">🎯 집중력 향상</p>
-              <p>생산성 도구</p>
+              <p>생산성 도구 (로컬 모드)</p>
             </div>
           </div>
         )}

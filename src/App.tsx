@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider } from './contexts/AppContext';
+import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { DateNavigationRefactored } from './components/DateNavigationRefactored';
 import { TimerFeature } from './features/timer/TimerFeature';
@@ -8,13 +9,20 @@ import { TodoFeature } from './features/todo/TodoFeature';
 import { LinksFeature } from './features/links/LinksFeature';
 import { ConceptMapFeature } from './features/conceptmap/ConceptMapFeature';
 import StorageIndicator from './components/StorageIndicator';
+import LoginForm from './components/LoginForm';
+import UnauthorizedView from './components/UnauthorizedView';
+import { getStorageType } from './utils/storageType';
 
 type ActiveSection = 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap';
 
 const AppContent: React.FC = () => {
+  const { user, loading, isAuthorized } = useAuthContext();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>('timer');
+
+  const storageType = getStorageType();
+  const isLocalStorageMode = storageType === 'localStorage';
 
   // URL 쿼리파라미터에서 섹션 읽기
   useEffect(() => {
@@ -84,69 +92,106 @@ const AppContent: React.FC = () => {
     }
   };
 
-  return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onToggle={toggleSidebar}
-        activeSection={activeSection}
-        onSectionChange={handleSectionChange}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={toggleSidebarCollapse}
-      />
-
-      {/* Main content area */}
-      <div className={`transition-all duration-300 ${isSidebarOpen
-        ? isSidebarCollapsed
-          ? 'lg:ml-16'
-          : 'lg:ml-60'
-        : 'ml-0'
-        }`}>
-        <DateNavigationRefactored
-          onClearAllData={clearAllData}
-        />
-
-        <div className="p-6">
-          {activeSection === 'timer' && (
-            <div className="max-w-6xl mx-auto">
-              <TimerFeature />
-            </div>
-          )}
-
-          {activeSection === 'checklist' && (
-            <div className="max-w-4xl mx-auto">
-              <DailyChecklistFeature />
-            </div>
-          )}
-
-          {activeSection === 'todo' && (
-            <div className="max-w-4xl mx-auto">
-              <TodoFeature />
-            </div>
-          )}
-
-          {activeSection === 'links' && (
-            <div className="max-w-4xl mx-auto">
-              <LinksFeature />
-            </div>
-          )}
-
-          {activeSection === 'conceptmap' && (
-            <ConceptMapFeature />
-          )}
+  // 로딩 중일 때
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
         </div>
       </div>
+    );
+  }
 
-      <StorageIndicator />
+  // 로컬스토리지 모드이거나 Firebase 모드에서 인증된 사용자인 경우
+  if (isLocalStorageMode || (storageType === 'firebase' && isAuthorized)) {
+    return (
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onToggle={toggleSidebar}
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
+        />
+
+        {/* Main content area */}
+        <div className={`transition-all duration-300 ${isSidebarOpen
+          ? isSidebarCollapsed
+            ? 'lg:ml-16'
+            : 'lg:ml-60'
+          : 'ml-0'
+          }`}>
+          <DateNavigationRefactored
+            onClearAllData={clearAllData}
+          />
+
+          <div className="p-6">
+            {activeSection === 'timer' && (
+              <div className="max-w-6xl mx-auto">
+                <TimerFeature />
+              </div>
+            )}
+
+            {activeSection === 'checklist' && (
+              <div className="max-w-4xl mx-auto">
+                <DailyChecklistFeature />
+              </div>
+            )}
+
+            {activeSection === 'todo' && (
+              <div className="max-w-4xl mx-auto">
+                <TodoFeature />
+              </div>
+            )}
+
+            {activeSection === 'links' && (
+              <div className="max-w-4xl mx-auto">
+                <LinksFeature />
+              </div>
+            )}
+
+            {activeSection === 'conceptmap' && (
+              <ConceptMapFeature />
+            )}
+          </div>
+        </div>
+
+        <StorageIndicator />
+      </div>
+    );
+  }
+
+  // Firebase 모드에서 로그인하지 않은 경우
+  if (storageType === 'firebase' && !user) {
+    return <LoginForm />;
+  }
+
+  // Firebase 모드에서 로그인했지만 권한이 없는 경우
+  if (storageType === 'firebase' && user && !isAuthorized) {
+    return <UnauthorizedView />;
+  }
+
+  // 기본 로딩 화면
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">초기화 중...</p>
+      </div>
     </div>
   );
 };
 
 const App: React.FC = () => {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </AuthProvider>
   );
 };
 

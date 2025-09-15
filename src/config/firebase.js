@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 // Firebase 설정 (환경변수에서 가져오기)
 const firebaseConfig = {
@@ -24,16 +25,26 @@ console.log('Firebase Config:', {
 // Firebase 앱 초기화
 let app;
 let db;
+let auth;
+let googleProvider;
 
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+
+  // 구글 로그인 설정
+  googleProvider.setCustomParameters({
+    prompt: 'select_account'
+  });
+
   console.log('Firebase 초기화 성공');
 } catch (error) {
   console.error('Firebase 초기화 실패:', error);
   throw error;
 }
 
-export { db };
+export { db, auth, googleProvider };
 
 export default app;
