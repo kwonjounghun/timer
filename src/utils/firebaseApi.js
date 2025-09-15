@@ -1,16 +1,15 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
   orderBy,
   limit,
-  getDoc,
-  serverTimestamp 
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -55,17 +54,17 @@ export const getFocusCyclesByDate = async (date) => {
       where('date', '==', date),
       orderBy('createdAt', 'asc')
     );
-    
+
     const querySnapshot = await getDocs(q);
     const cycles = [];
-    
+
     querySnapshot.forEach((doc) => {
       cycles.push({
         id: doc.id,
         ...doc.data()
       });
     });
-    
+
     return cycles;
   } catch (error) {
     console.error('포커스 사이클 조회 실패:', error);
@@ -85,17 +84,17 @@ export const getAllFocusCycles = async (limitCount = 100) => {
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
-    
+
     const querySnapshot = await getDocs(q);
     const cycles = [];
-    
+
     querySnapshot.forEach((doc) => {
       cycles.push({
         id: doc.id,
         ...doc.data()
       });
     });
-    
+
     return cycles;
   } catch (error) {
     console.error('모든 포커스 사이클 조회 실패:', error);
@@ -168,13 +167,13 @@ export const getDailyChecklistByDate = async (date) => {
       where('date', '==', date),
       limit(1)
     );
-    
+
     const querySnapshot = await getDocs(q);
-    
+
     if (querySnapshot.empty) {
       return null;
     }
-    
+
     const doc = querySnapshot.docs[0];
     return {
       id: doc.id,
@@ -217,17 +216,17 @@ export const getAllDailyChecklists = async (limitCount = 100) => {
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
-    
+
     const querySnapshot = await getDocs(q);
     const checklists = [];
-    
+
     querySnapshot.forEach((doc) => {
       checklists.push({
         id: doc.id,
         ...doc.data()
       });
     });
-    
+
     return checklists;
   } catch (error) {
     console.error('모든 일일 체크리스트 조회 실패:', error);
@@ -243,11 +242,11 @@ export const testFirebaseConnection = async () => {
   try {
     console.log('Firebase 연결 테스트 시작...');
     console.log('DB 인스턴스:', db);
-    
+
     // 간단한 테스트 쿼리 실행 (실시간 리스너 없이)
     const q = query(collection(db, COLLECTIONS.FOCUS_CYCLES), limit(1));
     const querySnapshot = await getDocs(q);
-    
+
     console.log('Firebase 연결 테스트 성공:', querySnapshot);
     return {
       success: true,
@@ -273,11 +272,11 @@ export const testFirebaseConnection = async () => {
 export const simpleFirebaseTest = async () => {
   try {
     console.log('간단한 Firebase 테스트 시작...');
-    
+
     // 가장 기본적인 테스트: 컬렉션 참조 생성
     const testCollection = collection(db, 'test_collection');
     console.log('컬렉션 참조 생성 성공:', testCollection);
-    
+
     return {
       success: true,
       message: 'Firebase 기본 연결 성공',
@@ -307,7 +306,7 @@ export const initializeCollections = async () => {
       startTime: new Date().toISOString(),
       endTime: new Date(Date.now() + 10 * 60 * 1000).toISOString()
     };
-    
+
     await saveFocusCycle(testCycle);
     console.log('Firebase 컬렉션 초기화 완료');
   } catch (error) {
