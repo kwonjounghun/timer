@@ -29,9 +29,15 @@ export const useCycleHistory = (selectedDate: string): CycleHistory => {
 
   // Get cycles for current date
   const currentDateCycles = focusCycles.filter(cycle => cycle.date === selectedDate);
-  const sortedCycles = [...currentDateCycles].sort((a, b) =>
-    new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-  );
+  const sortedCycles = [...currentDateCycles].sort((a, b) => {
+    const aTime = new Date(a.startTime).getTime();
+    const bTime = new Date(b.startTime).getTime();
+    // 유효하지 않은 시간이 있으면 뒤로 정렬
+    if (isNaN(aTime) && isNaN(bTime)) return 0;
+    if (isNaN(aTime)) return 1;
+    if (isNaN(bTime)) return -1;
+    return aTime - bTime;
+  });
 
   // Toggle cycle expansion
   const toggleExpand = useCallback((cycleId: string) => {
@@ -96,7 +102,10 @@ export const useCycleHistory = (selectedDate: string): CycleHistory => {
           ...cycle,
           startTime: new Date(cycle.startTime),
           endTime: new Date(cycle.endTime),
-        }));
+        })).filter((cycle: FocusCycle) => {
+          // 유효한 Date 객체인지 확인
+          return !isNaN(cycle.startTime.getTime()) && !isNaN(cycle.endTime.getTime());
+        });
         setFocusCycles(parsedCycles);
       } catch (error) {
         console.error('Failed to load focus cycles:', error);

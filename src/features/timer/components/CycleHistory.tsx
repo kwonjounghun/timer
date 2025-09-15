@@ -55,14 +55,16 @@ export const CycleHistory: React.FC<CycleHistoryProps> = ({ cycleHistory, select
       <div className="space-y-4">
         {sortedCycles.map((cycle, index) => {
           const isExpanded = expandedCycles.has(cycle.id);
-          const startTime = new Date(cycle.startTime).toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-          const endTime = new Date(cycle.endTime).toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit'
-          });
+          // 안전하게 시간 변환
+          const startDate = new Date(cycle.startTime);
+          const endDate = new Date(cycle.endTime);
+
+          const startTime = !isNaN(startDate.getTime())
+            ? startDate.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+            : '시간 오류';
+          const endTime = !isNaN(endDate.getTime())
+            ? endDate.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+            : '시간 오류';
 
           return (
             <div key={cycle.id} className="border border-gray-200 rounded-lg">

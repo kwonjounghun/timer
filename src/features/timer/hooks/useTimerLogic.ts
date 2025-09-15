@@ -132,8 +132,8 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
       id: Date.now().toString(),
       date: selectedDate, // 선택된 날짜 사용
       task: currentTask,
-      startTime,
-      endTime,
+      startTime: startTime.toISOString(), // ISO 문자열로 저장
+      endTime: endTime.toISOString(), // ISO 문자열로 저장
       timeSpent: actualTimeSpent,
       result: reflection.result,
       distractions: reflection.distractions,
