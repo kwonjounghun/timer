@@ -18,6 +18,9 @@ import { db } from '../config/firebase';
 const COLLECTIONS = {
   FOCUS_CYCLES: 'focus_cycles',
   DAILY_CHECKLISTS: 'daily_checklists',
+  LINKS: 'links',
+  CONCEPTMAP: 'conceptmap',
+  TODOS: 'todos',
   SETTINGS: 'settings'
 };
 
@@ -309,6 +312,216 @@ export const initializeCollections = async () => {
     console.log('Firebase 컬렉션 초기화 완료');
   } catch (error) {
     console.error('Firebase 컬렉션 초기화 실패:', error);
+    throw error;
+  }
+};
+
+// ==================== 링크 관리 API ====================
+
+/**
+ * 링크를 Firestore에 저장
+ * @param {Object} linkData - 링크 데이터
+ * @returns {Promise<string>} 생성된 문서 ID
+ */
+export const saveLink = async (linkData) => {
+  try {
+    const docRef = await addDoc(collection(db, COLLECTIONS.LINKS), {
+      ...linkData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('링크 저장 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 모든 링크 조회
+ * @returns {Promise<Array>} 링크 목록
+ */
+export const getLinks = async () => {
+  try {
+    const q = query(collection(db, COLLECTIONS.LINKS), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error('링크 조회 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 링크 업데이트
+ * @param {string} linkId - 링크 ID
+ * @param {Object} updateData - 업데이트할 데이터
+ * @returns {Promise<void>}
+ */
+export const updateLink = async (linkId, updateData) => {
+  try {
+    const linkRef = doc(db, COLLECTIONS.LINKS, linkId);
+    await updateDoc(linkRef, {
+      ...updateData,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('링크 업데이트 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 링크 삭제
+ * @param {string} linkId - 링크 ID
+ * @returns {Promise<void>}
+ */
+export const deleteLink = async (linkId) => {
+  try {
+    const linkRef = doc(db, COLLECTIONS.LINKS, linkId);
+    await deleteDoc(linkRef);
+  } catch (error) {
+    console.error('링크 삭제 실패:', error);
+    throw error;
+  }
+};
+
+// ==================== 컨셉맵 관리 API ====================
+
+/**
+ * 컨셉맵을 Firestore에 저장
+ * @param {Object} conceptMapData - 컨셉맵 데이터
+ * @returns {Promise<string>} 생성된 문서 ID
+ */
+export const saveConceptMap = async (conceptMapData) => {
+  try {
+    const docRef = await addDoc(collection(db, COLLECTIONS.CONCEPTMAP), {
+      ...conceptMapData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('컨셉맵 저장 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 모든 컨셉맵 조회
+ * @returns {Promise<Array>} 컨셉맵 목록
+ */
+export const getConceptMaps = async () => {
+  try {
+    const q = query(collection(db, COLLECTIONS.CONCEPTMAP), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error('컨셉맵 조회 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 컨셉맵 업데이트
+ * @param {string} conceptMapId - 컨셉맵 ID
+ * @param {Object} updateData - 업데이트할 데이터
+ * @returns {Promise<void>}
+ */
+export const updateConceptMap = async (conceptMapId, updateData) => {
+  try {
+    const conceptMapRef = doc(db, COLLECTIONS.CONCEPTMAP, conceptMapId);
+    await updateDoc(conceptMapRef, {
+      ...updateData,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('컨셉맵 업데이트 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 컨셉맵 삭제
+ * @param {string} conceptMapId - 컨셉맵 ID
+ * @returns {Promise<void>}
+ */
+export const deleteConceptMap = async (conceptMapId) => {
+  try {
+    const conceptMapRef = doc(db, COLLECTIONS.CONCEPTMAP, conceptMapId);
+    await deleteDoc(conceptMapRef);
+  } catch (error) {
+    console.error('컨셉맵 삭제 실패:', error);
+    throw error;
+  }
+};
+
+// ==================== 할일 관리 API ====================
+
+/**
+ * 할일을 Firestore에 저장
+ * @param {Object} todoData - 할일 데이터
+ * @returns {Promise<string>} 생성된 문서 ID
+ */
+export const saveTodo = async (todoData) => {
+  try {
+    const docRef = await addDoc(collection(db, COLLECTIONS.TODOS), {
+      ...todoData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('할일 저장 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 모든 할일 조회
+ * @returns {Promise<Array>} 할일 목록
+ */
+export const getTodos = async () => {
+  try {
+    const q = query(collection(db, COLLECTIONS.TODOS), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error('할일 조회 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 할일 업데이트
+ * @param {string} todoId - 할일 ID
+ * @param {Object} updateData - 업데이트할 데이터
+ * @returns {Promise<void>}
+ */
+export const updateTodo = async (todoId, updateData) => {
+  try {
+    const todoRef = doc(db, COLLECTIONS.TODOS, todoId);
+    await updateDoc(todoRef, {
+      ...updateData,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('할일 업데이트 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 할일 삭제
+ * @param {string} todoId - 할일 ID
+ * @returns {Promise<void>}
+ */
+export const deleteTodo = async (todoId) => {
+  try {
+    const todoRef = doc(db, COLLECTIONS.TODOS, todoId);
+    await deleteDoc(todoRef);
+  } catch (error) {
+    console.error('할일 삭제 실패:', error);
     throw error;
   }
 };

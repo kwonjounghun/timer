@@ -1,5 +1,5 @@
 import { getStorageType } from './storageType';
-import {
+import { 
   saveFocusCycle as firebaseSaveFocusCycle,
   getFocusCyclesByDate as firebaseGetFocusCyclesByDate,
   getAllFocusCycles as firebaseGetAllFocusCycles,
@@ -8,7 +8,19 @@ import {
   saveDailyChecklist as firebaseSaveDailyChecklist,
   getDailyChecklistByDate as firebaseGetDailyChecklistByDate,
   updateDailyChecklist as firebaseUpdateDailyChecklist,
-  getAllDailyChecklists as firebaseGetAllDailyChecklists
+  getAllDailyChecklists as firebaseGetAllDailyChecklists,
+  saveLink as firebaseSaveLink,
+  getLinks as firebaseGetLinks,
+  updateLink as firebaseUpdateLink,
+  deleteLink as firebaseDeleteLink,
+  saveConceptMap as firebaseSaveConceptMap,
+  getConceptMaps as firebaseGetConceptMaps,
+  updateConceptMap as firebaseUpdateConceptMap,
+  deleteConceptMap as firebaseDeleteConceptMap,
+  saveTodo as firebaseSaveTodo,
+  getTodos as firebaseGetTodos,
+  updateTodo as firebaseUpdateTodo,
+  deleteTodo as firebaseDeleteTodo
 } from './firebaseApi';
 
 // 로컬스토리지 키 상수
@@ -369,8 +381,7 @@ export const hybridStorage = {
   saveLink: async (linkData) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.saveLink(linkData);
+      return await firebaseSaveLink(linkData);
     } else {
       return await localStorageApi.saveLink(linkData);
     }
@@ -379,8 +390,7 @@ export const hybridStorage = {
   getLinks: async () => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.getLinks();
+      return await firebaseGetLinks();
     } else {
       return await localStorageApi.getLinks();
     }
@@ -389,8 +399,7 @@ export const hybridStorage = {
   updateLink: async (linkId, updateData) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.updateLink(linkId, updateData);
+      return await firebaseUpdateLink(linkId, updateData);
     } else {
       return await localStorageApi.updateLink(linkId, updateData);
     }
@@ -399,8 +408,7 @@ export const hybridStorage = {
   deleteLink: async (linkId) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.deleteLink(linkId);
+      return await firebaseDeleteLink(linkId);
     } else {
       return await localStorageApi.deleteLink(linkId);
     }
@@ -410,8 +418,7 @@ export const hybridStorage = {
   saveConceptMap: async (conceptMapData) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.saveConceptMap(conceptMapData);
+      return await firebaseSaveConceptMap(conceptMapData);
     } else {
       return await localStorageApi.saveConceptMap(conceptMapData);
     }
@@ -420,8 +427,7 @@ export const hybridStorage = {
   getConceptMaps: async () => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.getConceptMaps();
+      return await firebaseGetConceptMaps();
     } else {
       return await localStorageApi.getConceptMaps();
     }
@@ -430,8 +436,7 @@ export const hybridStorage = {
   updateConceptMap: async (conceptMapId, updateData) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.updateConceptMap(conceptMapId, updateData);
+      return await firebaseUpdateConceptMap(conceptMapId, updateData);
     } else {
       return await localStorageApi.updateConceptMap(conceptMapId, updateData);
     }
@@ -440,8 +445,7 @@ export const hybridStorage = {
   deleteConceptMap: async (conceptMapId) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.deleteConceptMap(conceptMapId);
+      return await firebaseDeleteConceptMap(conceptMapId);
     } else {
       return await localStorageApi.deleteConceptMap(conceptMapId);
     }
@@ -451,8 +455,7 @@ export const hybridStorage = {
   saveTodo: async (todoData) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.saveTodo(todoData);
+      return await firebaseSaveTodo(todoData);
     } else {
       return await localStorageApi.saveTodo(todoData);
     }
@@ -461,8 +464,7 @@ export const hybridStorage = {
   getTodos: async () => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.getTodos();
+      return await firebaseGetTodos();
     } else {
       return await localStorageApi.getTodos();
     }
@@ -471,8 +473,7 @@ export const hybridStorage = {
   updateTodo: async (todoId, updateData) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.updateTodo(todoId, updateData);
+      return await firebaseUpdateTodo(todoId, updateData);
     } else {
       return await localStorageApi.updateTodo(todoId, updateData);
     }
@@ -481,8 +482,7 @@ export const hybridStorage = {
   deleteTodo: async (todoId) => {
     const storageType = getStorageType();
     if (storageType === 'firebase') {
-      // Firebase API는 아직 구현되지 않음 - 로컬스토리지 사용
-      return await localStorageApi.deleteTodo(todoId);
+      return await firebaseDeleteTodo(todoId);
     } else {
       return await localStorageApi.deleteTodo(todoId);
     }
