@@ -14,7 +14,6 @@ export interface SectionExpansionState {
   morning: boolean;
   lunch: boolean;
   evening: boolean;
-  reflection: boolean;
 }
 
 export interface PreviewState {
@@ -50,7 +49,6 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     morning: true,
     lunch: false,
     evening: false,
-    reflection: false,
   });
   const [previewState, setPreviewState] = useState<PreviewState>({});
   const [editMode, setEditMode] = useState(false);

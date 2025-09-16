@@ -29,23 +29,14 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({
   return (
     <div className="space-y-4">
       {Object.entries(checklistTemplate).map(([sectionKey, section]) => (
-        <div key={sectionKey} className={`border rounded-lg overflow-hidden ${sectionKey === 'reflection'
-          ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50'
-          : 'border-gray-200'
-          }`}>
+        <div key={sectionKey} className="border rounded-lg overflow-hidden border-gray-200">
           {/* Section header */}
-          <div className={`p-4 transition-colors flex items-center justify-between ${sectionKey === 'reflection'
-            ? 'bg-gradient-to-r from-purple-100 to-indigo-100 hover:from-purple-200 hover:to-indigo-200'
-            : 'bg-gray-100 hover:bg-gray-200'
-            }`}>
+          <div className="p-4 transition-colors flex items-center justify-between bg-gray-100 hover:bg-gray-200">
             <button
               onClick={() => toggleSection(sectionKey)}
               className="flex items-center justify-between w-full text-left"
             >
-              <h2 className={`text-lg font-semibold ${sectionKey === 'reflection'
-                ? 'text-purple-800'
-                : 'text-gray-800'
-                }`}>{section.title}</h2>
+              <h2 className="text-lg font-semibold text-gray-800">{section.title}</h2>
               {expandedSections[sectionKey as keyof typeof expandedSections] ?
                 <ChevronDown className="text-gray-600" size={20} /> :
                 <ChevronRight className="text-gray-600" size={20} />
@@ -151,38 +142,20 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({
                                 updateAnswerWithFormatting(selectedDate, sectionKey, index, e.target.value);
                               }
                             }}
-                            rows={sectionKey === 'reflection' ? 4 : 3}
-                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent resize-vertical max-h-[500px] ${sectionKey === 'reflection'
-                              ? 'border-purple-300 focus:ring-purple-500 bg-purple-50'
-                              : 'border-gray-300 focus:ring-blue-500'
-                              }`}
-                            placeholder={sectionKey === 'reflection'
-                              ? "하루를 돌아보며 솔직하게 답변해주세요... (마크다운 문법 지원: **굵게**, *기울임*, - 목록, 1. 번호목록, ```코드블럭``` 등)"
-                              : "답변을 입력해주세요... (마크다운 문법 지원: **굵게**, *기울임*, - 목록, 1. 번호목록, ```코드블럭``` 등)"
-                            }
+                            rows={3}
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent resize-vertical max-h-[500px] border-gray-300 focus:ring-blue-500"
+                            placeholder="답변을 입력해주세요... (마크다운 문법 지원: **굵게**, *기울임*, - 목록, 1. 번호목록, ```코드블럭``` 등)"
                           />
                         )
                       ) : (
-                        <div className={`leading-relaxed ${sectionKey === 'reflection'
-                          ? 'text-purple-700'
-                          : 'text-gray-700'
-                          }`}>
+                        <div className="leading-relaxed text-gray-700">
                           {checklistData[selectedDate]?.data?.[sectionKey]?.[index] ? (
-                            <div className={`text-base leading-relaxed ${sectionKey === 'reflection'
-                              ? 'text-purple-800'
-                              : 'text-gray-800'
-                              }`}>
+                            <div className="text-base leading-relaxed text-gray-800">
                               <MarkdownRenderer content={checklistData[selectedDate].data[sectionKey][index]} />
                             </div>
                           ) : (
-                            <p className={`italic text-sm ${sectionKey === 'reflection'
-                              ? 'text-purple-400'
-                              : 'text-gray-400'
-                              }`}>
-                              {sectionKey === 'reflection'
-                                ? '하루를 돌아보며 회고를 작성해보세요. 수정 버튼을 눌러 작성해주세요.'
-                                : '답변이 없습니다. 수정 버튼을 눌러 작성해주세요.'
-                              }
+                            <p className="italic text-sm text-gray-400">
+                              답변이 없습니다. 수정 버튼을 눌러 작성해주세요.
                             </p>
                           )}
                         </div>
