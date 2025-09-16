@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, CheckCircle, Circle, Trash2, Edit, Eye } from 'lucide-react';
+import { Plus, Save, CheckCircle, Circle, Trash2, Edit, Eye, Calendar, ArrowLeft } from 'lucide-react';
 import { useRetrospectiveLogic } from './hooks/useRetrospectiveLogic';
 import { useAppContext } from '../../contexts/AppContext';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
@@ -20,6 +20,10 @@ const RetrospectiveFeature: React.FC = () => {
   const [previewImprovePoints, setPreviewImprovePoints] = useState(false);
   const [previewActionContent, setPreviewActionContent] = useState(false);
 
+  // 지난 목표 점검 관련 상태
+  const [editingPreviousGoals, setEditingPreviousGoals] = useState(false);
+  const [previewPreviousGoals, setPreviewPreviousGoals] = useState(false);
+
   const {
     currentRetrospective,
     isLoading,
@@ -35,6 +39,8 @@ const RetrospectiveFeature: React.FC = () => {
     updateActionItem,
     deleteActionItem,
     toggleActionItemCompletion,
+    loadPreviousActions,
+    updatePreviousGoalCheck,
     getStats
   } = useRetrospectiveLogic();
 
@@ -63,6 +69,11 @@ const RetrospectiveFeature: React.FC = () => {
     if (!newActionContent.trim()) return;
     addActionItem(newActionContent);
     setNewActionContent('');
+  };
+
+  // 지난 목표 점검 관련 핸들러
+  const handleUpdatePreviousGoals = (content: string) => {
+    updatePreviousGoalCheck(content);
   };
 
   const stats = getStats();
@@ -103,11 +114,10 @@ const RetrospectiveFeature: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={isSaving || !hasUnsavedChanges}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
-              hasUnsavedChanges
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${hasUnsavedChanges
+              ? 'bg-blue-500 text-white hover:bg-blue-600'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
           >
             <Save className="w-4 h-4" />
             {isSaving ? '저장 중...' : '저장'}
@@ -116,7 +126,76 @@ const RetrospectiveFeature: React.FC = () => {
       </div>
 
       <div className="space-y-8">
-        {/* 1. 오늘의 기록 */}
+        {/* 1. 지난 목표 점검 */}
+        <section className="bg-white rounded-lg border p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">📋 지난 목표 점검</h2>
+          <div>
+            {editingPreviousGoals ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPreviewPreviousGoals(!previewPreviousGoals)}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {previewPreviousGoals ? '편집' : '미리보기'}
+                  </button>
+                  <button
+                    onClick={() => setEditingPreviousGoals(false)}
+                    className="px-3 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded-lg"
+                  >
+                    완료
+                  </button>
+                </div>
+                {previewPreviousGoals ? (
+                  <div className="p-4 bg-gray-50 rounded-lg border">
+                    {currentRetrospective.previousGoalCheck?.content ? (
+                      <div className="text-base leading-relaxed text-gray-800">
+                        <MarkdownRenderer content={currentRetrospective.previousGoalCheck.content} />
+                      </div>
+                    ) : (
+                      <p className="italic text-sm text-gray-400">
+                        이전 목표 점검 내용이 없습니다. 수정 버튼을 눌러 작성해주세요.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <textarea
+                    value={currentRetrospective.previousGoalCheck?.content || ''}
+                    onChange={(e) => handleUpdatePreviousGoals(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical max-h-[500px]"
+                    rows={4}
+                    placeholder="이전에 목표했던 것들을 잘 지켰는지 점검해보세요... (마크다운 문법 지원: **굵게**, *기울임*, - 목록, 1. 번호목록, ```코드블럭``` 등)"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="leading-relaxed text-gray-700">
+                {currentRetrospective.previousGoalCheck?.content ? (
+                  <div className="text-base leading-relaxed text-gray-800">
+                    <MarkdownRenderer content={currentRetrospective.previousGoalCheck.content} />
+                  </div>
+                ) : (
+                  <p className="italic text-sm text-gray-400">
+                    이전 목표 점검 내용이 없습니다. 수정 버튼을 눌러 작성해주세요.
+                  </p>
+                )}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setEditingPreviousGoals(true)}
+                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                    수정
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+
+        {/* 2. 오늘의 기록 */}
         <section className="bg-white rounded-lg border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">📝 오늘의 기록</h2>
           <div>
@@ -170,14 +249,14 @@ const RetrospectiveFeature: React.FC = () => {
                 {currentRetrospective.dailyJournal.content ? (
                   <MarkdownRenderer content={currentRetrospective.dailyJournal.content} />
                 ) : (
-                  <p className="text-gray-500">오늘 하루를 자유롭게 기록해보세요. 있었던 일, 기분, 느낀, 생각들...<br/><span className="text-sm">클릭하여 편집</span></p>
+                  <p className="text-gray-500">오늘 하루를 자유롭게 기록해보세요. 있었던 일, 기분, 느낀, 생각들...<br /><span className="text-sm">클릭하여 편집</span></p>
                 )}
               </div>
             )}
           </div>
         </section>
 
-        {/* 2. 오늘의 회고 */}
+        {/* 3. 오늘의 회고 */}
         <section className="bg-white rounded-lg border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-6">🤔 오늘의 회고</h2>
 
@@ -300,11 +379,10 @@ const RetrospectiveFeature: React.FC = () => {
                 <button
                   onClick={handleAddReflection}
                   disabled={!newReflectionContent.trim()}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
-                    newReflectionContent.trim()
-                      ? 'bg-blue-500 text-white hover:bg-blue-600'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${newReflectionContent.trim()
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
                 >
                   <Plus className="w-4 h-4" />
                   회고 추가
@@ -464,7 +542,7 @@ const RetrospectiveFeature: React.FC = () => {
           </div>
         </section>
 
-        {/* 3. 다음 액션 */}
+        {/* 4. 다음 액션 */}
         <section className="bg-white rounded-lg border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">🎯 다음 액션</h2>
 
@@ -493,11 +571,10 @@ const RetrospectiveFeature: React.FC = () => {
                   <button
                     onClick={handleAddAction}
                     disabled={!newActionContent.trim()}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
-                      newActionContent.trim()
-                        ? 'bg-green-500 text-white hover:bg-green-600'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${newActionContent.trim()
+                      ? 'bg-green-500 text-white hover:bg-green-600'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
                   >
                     <Plus className="w-4 h-4" />
                     추가
@@ -541,11 +618,10 @@ const RetrospectiveFeature: React.FC = () => {
               currentRetrospective.nextActions.map((action) => (
                 <div
                   key={action.id}
-                  className={`p-3 rounded-lg border ${
-                    action.completed
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-gray-50 border-gray-200'
-                  }`}
+                  className={`p-3 rounded-lg border ${action.completed
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-gray-50 border-gray-200'
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <button
@@ -578,16 +654,14 @@ const RetrospectiveFeature: React.FC = () => {
                       />
                     ) : (
                       <div
-                        className={`flex-1 cursor-pointer hover:bg-gray-50 p-1 -m-1 rounded ${
-                          action.completed ? 'line-through opacity-60' : ''
-                        }`}
+                        className={`flex-1 cursor-pointer hover:bg-gray-50 p-1 -m-1 rounded ${action.completed ? 'line-through opacity-60' : ''
+                          }`}
                         onClick={() => setEditingAction(action.id)}
                       >
                         <MarkdownRenderer
                           content={action.description}
-                          className={`text-sm ${
-                            action.completed ? 'text-gray-500' : 'text-gray-800'
-                          }`}
+                          className={`text-sm ${action.completed ? 'text-gray-500' : 'text-gray-800'
+                            }`}
                         />
                       </div>
                     )}

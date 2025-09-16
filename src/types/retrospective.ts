@@ -26,13 +26,7 @@ export interface ActionItem {
  * 이전 목표 점검
  */
 export interface PreviousGoalCheck {
-  previousRetrospectiveId?: string;  // 이전 회고 ID
-  actionItems: {
-    id: string;
-    description: string;     // 원래 목표/액션
-    completed: boolean;      // 달성 여부
-    result: string;          // 결과 및 배운 점
-  }[];
+  content: string;           // 이전 목표 점검 내용 (텍스트)
 }
 
 /**

@@ -20,7 +20,7 @@ export interface RetrospectiveLogic {
   updateTags: (tags: string[]) => void;
 
   // 이전 목표 점검
-  updatePreviousGoalCheck: (goalCheck: PreviousGoalCheck) => void;
+  updatePreviousGoalCheck: (content: string) => void;
 
   // 회고 항목 관리
   addReflection: (content: string, goodPoints: string, improvePoints: string) => void;
@@ -162,10 +162,10 @@ export const useRetrospectiveLogic = (): RetrospectiveLogic => {
   }, [markAsChanged]);
 
   // 이전 목표 점검 업데이트
-  const updatePreviousGoalCheck = useCallback((goalCheck: PreviousGoalCheck) => {
+  const updatePreviousGoalCheck = useCallback((content: string) => {
     setCurrentRetrospective(prev => prev ? {
       ...prev,
-      previousGoalCheck: goalCheck
+      previousGoalCheck: { content }
     } : null);
     markAsChanged();
   }, [markAsChanged]);
