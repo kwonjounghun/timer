@@ -144,7 +144,7 @@ export const useTodoLogic = (): TodoLogic => {
       console.error('할일 업데이트 실패:', error);
       
       // Firebase에서 문서가 존재하지 않는 경우 처리
-      if (error.message.includes('존재하지 않습니다')) {
+      if (error instanceof Error && error.message.includes('존재하지 않습니다')) {
         // UI에서 해당 할일 제거
         setTodos(prev => prev.filter(todo => todo.id !== id));
         alert('해당 할일이 서버에 존재하지 않아 목록에서 제거되었습니다.');
@@ -156,7 +156,8 @@ export const useTodoLogic = (): TodoLogic => {
         todo.id === id ? todoToUpdate : todo
       ));
       // 사용자에게 알림
-      alert(`할일 상태 업데이트에 실패했습니다: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      alert(`할일 상태 업데이트에 실패했습니다: ${errorMessage}`);
     }
   }, [todos]);
 
@@ -219,7 +220,7 @@ export const useTodoLogic = (): TodoLogic => {
       console.error('할일 업데이트 실패:', error);
       
       // Firebase에서 문서가 존재하지 않는 경우 처리
-      if (error.message.includes('존재하지 않습니다')) {
+      if (error instanceof Error && error.message.includes('존재하지 않습니다')) {
         // UI에서 해당 할일 제거
         setTodos(prev => prev.filter(todo => todo.id !== id));
         alert('해당 할일이 서버에 존재하지 않아 목록에서 제거되었습니다.');
@@ -231,7 +232,8 @@ export const useTodoLogic = (): TodoLogic => {
         todo.id === id ? originalTodo : todo
       ));
       // 사용자에게 알림
-      alert(`할일 업데이트에 실패했습니다: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      alert(`할일 업데이트에 실패했습니다: ${errorMessage}`);
     }
   }, [todos]);
 
