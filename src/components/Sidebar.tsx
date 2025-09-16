@@ -1,12 +1,12 @@
-import { Timer, Calendar, CheckSquare, BookOpen, Network, Menu, X, ChevronLeft, ChevronRight, LogOut, User } from 'lucide-react';
+import { Timer, Calendar, CheckSquare, BookOpen, Network, FileText, Menu, X, ChevronLeft, ChevronRight, LogOut, User } from 'lucide-react';
 import { useAuthContext } from '../contexts/AuthContext';
 import { getStorageType } from '../utils/storageType';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  activeSection: 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap';
-  onSectionChange: (section: 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap') => void;
+  activeSection: 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap' | 'retrospective';
+  onSectionChange: (section: 'timer' | 'checklist' | 'todo' | 'links' | 'conceptmap' | 'retrospective') => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -40,6 +40,12 @@ export const Sidebar = ({
       label: '일일 점검 시스템',
       icon: Calendar,
       description: '하루 계획 & 회고'
+    },
+    {
+      id: 'retrospective' as const,
+      label: '일일 회고',
+      icon: FileText,
+      description: '목표 점검 & 성찰 & 액션 계획'
     },
     {
       id: 'links' as const,

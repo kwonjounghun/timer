@@ -21,7 +21,8 @@ export const COLLECTIONS = {
   LINKS: 'links',
   CONCEPTMAP: 'conceptmap',
   TODOS: 'todos',
-  SETTINGS: 'settings'
+  SETTINGS: 'settings',
+  RETROSPECTIVES: 'retrospectives'
 };
 
 export const testFirebaseConnection = async () => {
