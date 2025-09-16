@@ -57,8 +57,10 @@ export const useTodoLogic = (): TodoLogic => {
   const addTodo = useCallback(async (title: string, content: string, priority: 'high' | 'medium' | 'low' = 'medium') => {
     if (!title.trim()) return;
 
+    // 임시 ID로 즉시 UI 업데이트
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const newTodo: TodoItem = {
-      id: Date.now().toString(),
+      id: tempId,
       title: title.trim(),
       content: content.trim(),
       completed: false,
@@ -70,9 +72,18 @@ export const useTodoLogic = (): TodoLogic => {
 
     // Save using hybrid storage
     try {
-      await hybridStorage.saveTodo(newTodo);
+      const actualId = await hybridStorage.saveTodo(newTodo);
+
+      // Firebase에서 받은 실제 ID로 업데이트
+      if (actualId && actualId !== tempId) {
+        setTodos(prev => prev.map(todo =>
+          todo.id === tempId ? { ...todo, id: actualId } : todo
+        ));
+      }
     } catch (error) {
       console.error('할일 저장 실패:', error);
+      // 실패 시 추가된 할일 제거
+      setTodos(prev => prev.filter(todo => todo.id !== tempId));
     }
   }, []);
 
