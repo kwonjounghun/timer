@@ -22,13 +22,7 @@ export const Sidebar = ({
   const { user, logout, isAuthorized, signInWithGoogle } = useAuthContext();
   const storageType = getStorageType();
   const isFirebaseMode = storageType === 'firebase';
-  const menuItems = [
-    {
-      id: 'todo' as const,
-      label: '할 일 관리',
-      icon: CheckSquare,
-      description: '개인 할 일 목록 & 우선순위'
-    },
+  const dailyFeatures = [
     {
       id: 'timer' as const,
       label: '10분 집중 타이머',
@@ -46,6 +40,15 @@ export const Sidebar = ({
       label: '일일 회고',
       icon: FileText,
       description: '목표 점검 & 성찰 & 액션 계획'
+    }
+  ];
+
+  const generalFeatures = [
+    {
+      id: 'todo' as const,
+      label: '할 일 관리',
+      icon: CheckSquare,
+      description: '개인 할 일 목록 & 우선순위'
     },
     {
       id: 'links' as const,
@@ -111,56 +114,134 @@ export const Sidebar = ({
 
         {/* 메뉴 항목들 */}
         <div className={isCollapsed ? 'p-2' : 'p-4'}>
-          <nav className="space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeSection === item.id;
+          <nav className="space-y-4">
+            {/* 날짜 관련 기능 */}
+            {!isCollapsed && (
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                  📅 일일 기능
+                </div>
+                <div className="space-y-1">
+                  {dailyFeatures.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeSection === item.id;
 
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    onSectionChange(item.id);
-                    // 모바일에서는 메뉴 선택 후 사이드바 닫기
-                    if (window.innerWidth < 1024) {
-                      onToggle();
-                    }
-                  }}
-                  className={`
-                    w-full rounded-xl transition-all duration-200 text-left group relative
-                    ${isCollapsed ? 'p-3 flex justify-center' : 'p-3'}
-                    ${isActive
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-                      : 'hover:bg-gray-100 text-gray-700'
-                    }
-                  `}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  {isCollapsed ? (
-                    // 접힌 상태: 아이콘만 표시
-                    <>
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          onSectionChange(item.id);
+                          if (window.innerWidth < 1024) {
+                            onToggle();
+                          }
+                        }}
+                        className={`
+                          w-full rounded-xl transition-all duration-200 text-left group relative
+                          p-3
+                          ${isActive
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                            : 'hover:bg-gray-100 text-gray-700'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon size={20} className={isActive ? 'text-white' : 'text-blue-500'} />
+                          <div>
+                            <div className="font-medium text-sm">{item.label}</div>
+                            <div className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>
+                              {item.description}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 일반 기능 */}
+            {!isCollapsed && (
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                  🗂️ 일반 기능
+                </div>
+                <div className="space-y-1">
+                  {generalFeatures.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeSection === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          onSectionChange(item.id);
+                          if (window.innerWidth < 1024) {
+                            onToggle();
+                          }
+                        }}
+                        className={`
+                          w-full rounded-xl transition-all duration-200 text-left group relative
+                          p-3
+                          ${isActive
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                            : 'hover:bg-gray-100 text-gray-700'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon size={20} className={isActive ? 'text-white' : 'text-blue-500'} />
+                          <div>
+                            <div className="font-medium text-sm">{item.label}</div>
+                            <div className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>
+                              {item.description}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 접힌 상태: 모든 메뉴 아이콘만 표시 */}
+            {isCollapsed && (
+              <div className="space-y-2">
+                {[...dailyFeatures, ...generalFeatures].map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeSection === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        onSectionChange(item.id);
+                        if (window.innerWidth < 1024) {
+                          onToggle();
+                        }
+                      }}
+                      className={`
+                        w-full rounded-xl transition-all duration-200 text-left group relative
+                        p-3 flex justify-center
+                        ${isActive
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                          : 'hover:bg-gray-100 text-gray-700'
+                        }
+                      `}
+                      title={item.label}
+                    >
                       <Icon size={20} className={isActive ? 'text-white' : 'text-blue-500'} />
                       {/* 호버 시 툴팁 */}
                       <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
                         {item.label}
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45"></div>
                       </div>
-                    </>
-                  ) : (
-                    // 펼쳐진 상태: 전체 메뉴 표시
-                    <div className="flex items-center gap-3">
-                      <Icon size={20} className={isActive ? 'text-white' : 'text-blue-500'} />
-                      <div>
-                        <div className="font-medium text-sm">{item.label}</div>
-                        <div className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>
-                          {item.description}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </nav>
         </div>
 
