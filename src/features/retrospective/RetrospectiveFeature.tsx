@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, CheckCircle, Circle, Trash2, Edit, Eye, Calendar, ArrowLeft } from 'lucide-react';
+import { Plus, Save, CheckCircle, Circle, Trash2, Edit, Eye, Calendar, ArrowLeft, Copy, X } from 'lucide-react';
 import { useRetrospectiveLogic } from './hooks/useRetrospectiveLogic';
 import { useAppContext } from '../../contexts/AppContext';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
@@ -23,6 +23,9 @@ const RetrospectiveFeature: React.FC = () => {
   // 지난 목표 점검 관련 상태
   const [editingPreviousGoals, setEditingPreviousGoals] = useState(false);
   const [previewPreviousGoals, setPreviewPreviousGoals] = useState(false);
+
+  // 뷰어 모드 상태
+  const [isViewerMode, setIsViewerMode] = useState(true);
 
   const {
     currentRetrospective,
@@ -76,6 +79,55 @@ const RetrospectiveFeature: React.FC = () => {
     updatePreviousGoalCheck(content);
   };
 
+  // 전체 회고 내용 복사 기능
+  const handleCopyAllContent = async () => {
+    if (!currentRetrospective) return;
+
+    let content = `# 일일 회고 - ${selectedDate}\n\n`;
+
+    // 1. 지난 목표 점검
+    if (currentRetrospective.previousGoalCheck?.content) {
+      content += `## 📋 지난 목표 점검\n${currentRetrospective.previousGoalCheck.content}\n\n`;
+    }
+
+    // 2. 오늘의 기록
+    if (currentRetrospective.dailyJournal?.content) {
+      content += `## 📝 오늘의 기록\n${currentRetrospective.dailyJournal.content}\n\n`;
+    }
+
+    // 3. 오늘의 회고
+    if (currentRetrospective.reflections && currentRetrospective.reflections.length > 0) {
+      content += `## 🤔 오늘의 회고\n\n`;
+      currentRetrospective.reflections.forEach((reflection, index) => {
+        content += `### 회고 ${index + 1}\n`;
+        content += `**회고할 내용:** ${reflection.content}\n\n`;
+        content += `**잘한점:** ${reflection.goodPoints}\n\n`;
+        content += `**아쉬운점:** ${reflection.improvePoints}\n\n`;
+      });
+    }
+
+    // 4. 다음 액션
+    if (currentRetrospective.nextActions && currentRetrospective.nextActions.length > 0) {
+      content += `## 🎯 다음 액션\n\n`;
+      currentRetrospective.nextActions.forEach((action, index) => {
+        const status = action.completed ? '✅ 완료' : '⏳ 진행중';
+        content += `${index + 1}. ${action.description} (${status})\n`;
+        if (action.result) {
+          content += `   - 결과: ${action.result}\n`;
+        }
+        content += '\n';
+      });
+    }
+
+    try {
+      await navigator.clipboard.writeText(content);
+      alert('전체 회고 내용이 클립보드에 복사되었습니다.');
+    } catch (err) {
+      console.error('복사 실패:', err);
+      alert('복사에 실패했습니다.');
+    }
+  };
+
   const stats = getStats();
 
   if (isLoading) {
@@ -111,17 +163,45 @@ const RetrospectiveFeature: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleSave}
-            disabled={isSaving || !hasUnsavedChanges}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${hasUnsavedChanges
-              ? 'bg-blue-500 text-white hover:bg-blue-600'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? '저장 중...' : '저장'}
-          </button>
+          {isViewerMode ? (
+            <>
+              <button
+                onClick={handleCopyAllContent}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                <Copy className="w-4 h-4" />
+                전체 복사
+              </button>
+              <button
+                onClick={() => setIsViewerMode(false)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+              >
+                <Edit className="w-4 h-4" />
+                수정하기
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsViewerMode(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                보기
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving || !hasUnsavedChanges}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${hasUnsavedChanges
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? '저장 중...' : '저장'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -130,25 +210,61 @@ const RetrospectiveFeature: React.FC = () => {
         <section className="bg-white rounded-lg border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">📋 지난 목표 점검</h2>
           <div>
-            {editingPreviousGoals ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPreviewPreviousGoals(!previewPreviousGoals)}
-                    className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {previewPreviousGoals ? '편집' : '미리보기'}
-                  </button>
-                  <button
-                    onClick={() => setEditingPreviousGoals(false)}
-                    className="px-3 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded-lg"
-                  >
-                    완료
-                  </button>
-                </div>
-                {previewPreviousGoals ? (
-                  <div className="p-4 bg-gray-50 rounded-lg border">
+            {isViewerMode ? (
+              <div className="leading-relaxed text-gray-700">
+                {currentRetrospective.previousGoalCheck?.content ? (
+                  <div className="text-base leading-relaxed text-gray-800">
+                    <MarkdownRenderer content={currentRetrospective.previousGoalCheck.content} />
+                  </div>
+                ) : (
+                  <p className="italic text-sm text-gray-400">
+                    이전 목표 점검 내용이 없습니다.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div>
+                {editingPreviousGoals ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setPreviewPreviousGoals(!previewPreviousGoals)}
+                        className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                        {previewPreviousGoals ? '편집' : '미리보기'}
+                      </button>
+                      <button
+                        onClick={() => setEditingPreviousGoals(false)}
+                        className="px-3 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded-lg"
+                      >
+                        완료
+                      </button>
+                    </div>
+                    {previewPreviousGoals ? (
+                      <div className="p-4 bg-gray-50 rounded-lg border">
+                        {currentRetrospective.previousGoalCheck?.content ? (
+                          <div className="text-base leading-relaxed text-gray-800">
+                            <MarkdownRenderer content={currentRetrospective.previousGoalCheck.content} />
+                          </div>
+                        ) : (
+                          <p className="italic text-sm text-gray-400">
+                            이전 목표 점검 내용이 없습니다. 수정 버튼을 눌러 작성해주세요.
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <textarea
+                        value={currentRetrospective.previousGoalCheck?.content || ''}
+                        onChange={(e) => handleUpdatePreviousGoals(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical max-h-[500px]"
+                        rows={4}
+                        placeholder="이전에 목표했던 것들을 잘 지켰는지 점검해보세요... (마크다운 문법 지원: **굵게**, *기울임*, - 목록, 1. 번호목록, ```코드블럭``` 등)"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="leading-relaxed text-gray-700">
                     {currentRetrospective.previousGoalCheck?.content ? (
                       <div className="text-base leading-relaxed text-gray-800">
                         <MarkdownRenderer content={currentRetrospective.previousGoalCheck.content} />
@@ -158,37 +274,17 @@ const RetrospectiveFeature: React.FC = () => {
                         이전 목표 점검 내용이 없습니다. 수정 버튼을 눌러 작성해주세요.
                       </p>
                     )}
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setEditingPreviousGoals(true)}
+                        className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                        수정
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <textarea
-                    value={currentRetrospective.previousGoalCheck?.content || ''}
-                    onChange={(e) => handleUpdatePreviousGoals(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical max-h-[500px]"
-                    rows={4}
-                    placeholder="이전에 목표했던 것들을 잘 지켰는지 점검해보세요... (마크다운 문법 지원: **굵게**, *기울임*, - 목록, 1. 번호목록, ```코드블럭``` 등)"
-                  />
                 )}
-              </div>
-            ) : (
-              <div className="leading-relaxed text-gray-700">
-                {currentRetrospective.previousGoalCheck?.content ? (
-                  <div className="text-base leading-relaxed text-gray-800">
-                    <MarkdownRenderer content={currentRetrospective.previousGoalCheck.content} />
-                  </div>
-                ) : (
-                  <p className="italic text-sm text-gray-400">
-                    이전 목표 점검 내용이 없습니다. 수정 버튼을 눌러 작성해주세요.
-                  </p>
-                )}
-                <div className="mt-4">
-                  <button
-                    onClick={() => setEditingPreviousGoals(true)}
-                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                    수정
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -199,57 +295,73 @@ const RetrospectiveFeature: React.FC = () => {
         <section className="bg-white rounded-lg border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">📝 오늘의 기록</h2>
           <div>
-            {editingDailyJournal ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPreviewDailyJournal(!previewDailyJournal)}
-                    className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {previewDailyJournal ? '편집' : '미리보기'}
-                  </button>
-                  <button
-                    onClick={() => setEditingDailyJournal(false)}
-                    className="px-3 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded-lg"
-                  >
-                    완료
-                  </button>
-                </div>
-                {previewDailyJournal ? (
-                  <div className="min-h-[200px] p-4 border border-gray-200 rounded-lg bg-gray-50">
-                    {currentRetrospective.dailyJournal.content ? (
-                      <MarkdownRenderer content={currentRetrospective.dailyJournal.content} />
-                    ) : (
-                      <p className="text-gray-400">내용이 없습니다.</p>
-                    )}
+            {isViewerMode ? (
+              <div className="leading-relaxed text-gray-700">
+                {currentRetrospective.dailyJournal.content ? (
+                  <div className="text-base leading-relaxed text-gray-800">
+                    <MarkdownRenderer content={currentRetrospective.dailyJournal.content} />
                   </div>
                 ) : (
-                  <textarea
-                    value={currentRetrospective.dailyJournal.content}
-                    onChange={(e) => updateDailyJournal(e.target.value)}
-                    placeholder="오늘 하루를 자유롭게 기록해보세요. 있었던 일, 기분, 느낀, 생각들...
+                  <p className="italic text-sm text-gray-400">
+                    오늘의 기록이 없습니다.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div>
+                {editingDailyJournal ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setPreviewDailyJournal(!previewDailyJournal)}
+                        className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                        {previewDailyJournal ? '편집' : '미리보기'}
+                      </button>
+                      <button
+                        onClick={() => setEditingDailyJournal(false)}
+                        className="px-3 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded-lg"
+                      >
+                        완료
+                      </button>
+                    </div>
+                    {previewDailyJournal ? (
+                      <div className="min-h-[200px] p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        {currentRetrospective.dailyJournal.content ? (
+                          <MarkdownRenderer content={currentRetrospective.dailyJournal.content} />
+                        ) : (
+                          <p className="text-gray-400">내용이 없습니다.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <textarea
+                        value={currentRetrospective.dailyJournal.content}
+                        onChange={(e) => updateDailyJournal(e.target.value)}
+                        placeholder="오늘 하루를 자유롭게 기록해보세요. 있었던 일, 기분, 느낀, 생각들...
 
 **마크다운 문법 사용 가능**: **굵은글씨**, *기울임*,
 - 목록 항목
 - [ ] 체크박스
 > 인용문
 `코드` 등"
-                    className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    rows={8}
-                    autoFocus
-                  />
-                )}
-              </div>
-            ) : (
-              <div
-                className="min-h-[120px] p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
-                onClick={() => setEditingDailyJournal(true)}
-              >
-                {currentRetrospective.dailyJournal.content ? (
-                  <MarkdownRenderer content={currentRetrospective.dailyJournal.content} />
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        rows={8}
+                        autoFocus
+                      />
+                    )}
+                  </div>
                 ) : (
-                  <p className="text-gray-500">오늘 하루를 자유롭게 기록해보세요. 있었던 일, 기분, 느낀, 생각들...<br /><span className="text-sm">클릭하여 편집</span></p>
+                  <div
+                    className="min-h-[120px] p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+                    onClick={() => setEditingDailyJournal(true)}
+                  >
+                    {currentRetrospective.dailyJournal.content ? (
+                      <MarkdownRenderer content={currentRetrospective.dailyJournal.content} />
+                    ) : (
+                      <p className="text-gray-500">오늘 하루를 자유롭게 기록해보세요. 있었던 일, 기분, 느낀, 생각들...<br /><span className="text-sm">클릭하여 편집</span></p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -260,8 +372,9 @@ const RetrospectiveFeature: React.FC = () => {
         <section className="bg-white rounded-lg border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-6">🤔 오늘의 회고</h2>
 
-          {/* 회고 추가 */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+          {/* 회고 추가 - 편집 모드에서만 표시 */}
+          {!isViewerMode && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
             <div className="space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -390,6 +503,7 @@ const RetrospectiveFeature: React.FC = () => {
               </div>
             </div>
           </div>
+          )}
 
           {/* 회고 목록 */}
           <div className="space-y-4">
@@ -494,25 +608,27 @@ const RetrospectiveFeature: React.FC = () => {
                     <div>
                       <div className="flex items-start justify-between mb-3">
                         <div
-                          className="cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded"
-                          onClick={() => setEditingReflection(reflection.id)}
+                          className={`${isViewerMode ? '' : 'cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded'}`}
+                          onClick={isViewerMode ? undefined : () => setEditingReflection(reflection.id)}
                         >
                           <MarkdownRenderer content={reflection.content} className="font-medium" />
                         </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setEditingReflection(reflection.id)}
-                            className="p-1 text-gray-400 hover:text-blue-500"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => deleteReflection(reflection.id)}
-                            className="p-1 text-gray-400 hover:text-red-500"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                        {!isViewerMode && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setEditingReflection(reflection.id)}
+                              className="p-1 text-gray-400 hover:text-blue-500"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteReflection(reflection.id)}
+                              className="p-1 text-gray-400 hover:text-red-500"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -546,8 +662,9 @@ const RetrospectiveFeature: React.FC = () => {
         <section className="bg-white rounded-lg border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">🎯 다음 액션</h2>
 
-          {/* 액션 추가 */}
-          <div className="mb-6">
+          {/* 액션 추가 - 편집 모드에서만 표시 */}
+          {!isViewerMode && (
+            <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">새 액션 아이템</label>
               <button
@@ -607,6 +724,7 @@ const RetrospectiveFeature: React.FC = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* 액션 목록 */}
           <div className="space-y-2">
@@ -624,16 +742,26 @@ const RetrospectiveFeature: React.FC = () => {
                     }`}
                 >
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => toggleActionItemCompletion(action.id)}
-                      className="flex-shrink-0"
-                    >
-                      {action.completed ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-400" />
-                      )}
-                    </button>
+                    {isViewerMode ? (
+                      <div className="flex-shrink-0">
+                        {action.completed ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => toggleActionItemCompletion(action.id)}
+                        className="flex-shrink-0"
+                      >
+                        {action.completed ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+                    )}
 
                     {editingAction === action.id ? (
                       <input
@@ -654,9 +782,9 @@ const RetrospectiveFeature: React.FC = () => {
                       />
                     ) : (
                       <div
-                        className={`flex-1 cursor-pointer hover:bg-gray-50 p-1 -m-1 rounded ${action.completed ? 'line-through opacity-60' : ''
+                        className={`flex-1 ${isViewerMode ? '' : 'cursor-pointer hover:bg-gray-50 p-1 -m-1 rounded'} ${action.completed ? 'line-through opacity-60' : ''
                           }`}
-                        onClick={() => setEditingAction(action.id)}
+                        onClick={isViewerMode ? undefined : () => setEditingAction(action.id)}
                       >
                         <MarkdownRenderer
                           content={action.description}
@@ -666,20 +794,22 @@ const RetrospectiveFeature: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setEditingAction(action.id)}
-                        className="p-1 text-gray-400 hover:text-blue-500"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteActionItem(action.id)}
-                        className="p-1 text-gray-400 hover:text-red-500"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {!isViewerMode && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setEditingAction(action.id)}
+                          className="p-1 text-gray-400 hover:text-blue-500"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteActionItem(action.id)}
+                          className="p-1 text-gray-400 hover:text-red-500"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {action.completed && action.result && (
