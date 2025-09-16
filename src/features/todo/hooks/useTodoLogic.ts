@@ -31,15 +31,6 @@ export const useTodoLogic = (): TodoLogic => {
     const loadTodos = async () => {
       try {
         const todos = await hybridStorage.getTodos();
-        console.log('로드된 할일 데이터:', todos);
-        console.log('할일 데이터 상세:', todos.map(todo => ({
-          id: todo.id,
-          title: todo.title,
-          hasIdField: 'id' in todo,
-          idType: typeof todo.id,
-          idValue: todo.id
-        })));
-        
         const parsedTodos = todos.map((todo: any) => {
           const createdAt = new Date(todo.createdAt);
           const completedAt = todo.completedAt ? new Date(todo.completedAt) : undefined;
@@ -53,9 +44,6 @@ export const useTodoLogic = (): TodoLogic => {
             completedAt: completedAt && !isNaN(completedAt.getTime()) ? completedAt : undefined,
           };
         });
-        
-        console.log('파싱된 할일 데이터:', parsedTodos);
-        console.log('파싱된 할일 ID들:', parsedTodos.map(todo => todo.id));
         setTodos(parsedTodos);
       } catch (error) {
         console.error('Failed to load todos:', error);
@@ -148,30 +136,15 @@ export const useTodoLogic = (): TodoLogic => {
 
     // 저장소에 저장
     try {
-      console.log('할일 업데이트 시도:', {
-        id,
-        completed: updatedTodo.completed,
-        completedAt: updatedTodo.completedAt,
-        storageType: hybridStorage.getStorageInfo()
-      });
-      
       await hybridStorage.updateTodo(id, {
         completed: updatedTodo.completed,
         completedAt: updatedTodo.completedAt,
       });
-      
-      console.log('할일 업데이트 성공:', id);
     } catch (error) {
       console.error('할일 업데이트 실패:', error);
-      console.error('에러 상세:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
       
       // Firebase에서 문서가 존재하지 않는 경우 처리
       if (error.message.includes('존재하지 않습니다')) {
-        console.warn('Firebase에 존재하지 않는 할일을 UI에서 제거합니다:', id);
         // UI에서 해당 할일 제거
         setTodos(prev => prev.filter(todo => todo.id !== id));
         alert('해당 할일이 서버에 존재하지 않아 목록에서 제거되었습니다.');
@@ -241,26 +214,12 @@ export const useTodoLogic = (): TodoLogic => {
 
     // 저장소에 저장
     try {
-      console.log('할일 업데이트 시도:', {
-        id,
-        updates,
-        storageType: hybridStorage.getStorageInfo()
-      });
-      
       await hybridStorage.updateTodo(id, updates);
-      
-      console.log('할일 업데이트 성공:', id);
     } catch (error) {
       console.error('할일 업데이트 실패:', error);
-      console.error('에러 상세:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
       
       // Firebase에서 문서가 존재하지 않는 경우 처리
       if (error.message.includes('존재하지 않습니다')) {
-        console.warn('Firebase에 존재하지 않는 할일을 UI에서 제거합니다:', id);
         // UI에서 해당 할일 제거
         setTodos(prev => prev.filter(todo => todo.id !== id));
         alert('해당 할일이 서버에 존재하지 않아 목록에서 제거되었습니다.');
@@ -302,9 +261,7 @@ export const useTodoLogic = (): TodoLogic => {
   // Refresh todos from storage
   const refreshTodos = useCallback(async () => {
     try {
-      console.log('할일 데이터 새로고침 시작...');
       const todos = await hybridStorage.getTodos();
-      console.log('새로고침된 할일 데이터:', todos);
       
       const parsedTodos = todos.map((todo: any) => {
         const createdAt = new Date(todo.createdAt);
@@ -321,7 +278,6 @@ export const useTodoLogic = (): TodoLogic => {
       });
       
       setTodos(parsedTodos);
-      console.log('할일 데이터 새로고침 완료');
     } catch (error) {
       console.error('할일 데이터 새로고침 실패:', error);
     }
