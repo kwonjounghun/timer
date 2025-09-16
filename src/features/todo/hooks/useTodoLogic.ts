@@ -32,6 +32,13 @@ export const useTodoLogic = (): TodoLogic => {
       try {
         const todos = await hybridStorage.getTodos();
         console.log('로드된 할일 데이터:', todos);
+        console.log('할일 데이터 상세:', todos.map(todo => ({
+          id: todo.id,
+          title: todo.title,
+          hasIdField: 'id' in todo,
+          idType: typeof todo.id,
+          idValue: todo.id
+        })));
         
         const parsedTodos = todos.map((todo: any) => {
           const createdAt = new Date(todo.createdAt);
@@ -48,6 +55,7 @@ export const useTodoLogic = (): TodoLogic => {
         });
         
         console.log('파싱된 할일 데이터:', parsedTodos);
+        console.log('파싱된 할일 ID들:', parsedTodos.map(todo => todo.id));
         setTodos(parsedTodos);
       } catch (error) {
         console.error('Failed to load todos:', error);

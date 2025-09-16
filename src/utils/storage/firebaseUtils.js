@@ -75,8 +75,10 @@ export const simpleFirebaseTest = async () => {
 
 export const createDocument = async (collectionName, data) => {
   try {
-    // Date 객체를 Timestamp로 변환
+    // Date 객체를 Timestamp로 변환하고 id 필드 제거
     const processedData = { ...data };
+    delete processedData.id; // Firebase가 자동 생성한 문서 ID를 사용하도록 id 필드 제거
+    
     if (processedData.completedAt instanceof Date) {
       processedData.completedAt = serverTimestamp();
     }
@@ -162,7 +164,16 @@ export const getDocuments = async (collectionName, queryOptions = {}) => {
     }
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Firebase 문서 ID를 우선시하고, 데이터의 id 필드는 무시
+      return { 
+        id: doc.id,  // Firebase 문서 ID가 실제 ID
+        ...data,
+        // 데이터에 id 필드가 있어도 Firebase 문서 ID로 덮어씀
+        id: doc.id
+      };
+    });
   } catch (error) {
     console.error(`${collectionName} 문서 조회 실패:`, error);
     throw error;
