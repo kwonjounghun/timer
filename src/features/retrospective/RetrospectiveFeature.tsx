@@ -375,134 +375,134 @@ const RetrospectiveFeature: React.FC = () => {
           {/* 회고 추가 - 편집 모드에서만 표시 */}
           {!isViewerMode && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-gray-700">회고할 내용</label>
-                  <button
-                    onClick={() => setPreviewReflectionContent(!previewReflectionContent)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-                  >
-                    <Eye className="w-3 h-3" />
-                    {previewReflectionContent ? '편집' : '미리보기'}
-                  </button>
-                </div>
-                {previewReflectionContent ? (
-                  <div className="min-h-[80px] p-3 border border-gray-200 rounded-lg bg-gray-50">
-                    {newReflectionContent ? (
-                      <MarkdownRenderer content={newReflectionContent} />
-                    ) : (
-                      <p className="text-gray-400 text-sm">내용이 없습니다.</p>
-                    )}
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700">회고할 내용</label>
+                    <button
+                      onClick={() => setPreviewReflectionContent(!previewReflectionContent)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                    >
+                      <Eye className="w-3 h-3" />
+                      {previewReflectionContent ? '편집' : '미리보기'}
+                    </button>
                   </div>
-                ) : (
-                  <textarea
-                    value={newReflectionContent}
-                    onChange={(e) => {
-                      setNewReflectionContent(e.target.value);
-                      // 자동 크기 조절
-                      e.target.style.height = 'auto';
-                      e.target.style.height = e.target.scrollHeight + 'px';
-                    }}
-                    placeholder="무엇에 대해 회고할건지 입력하세요... (예: 오늘 프로젝트 발표를 했다)
+                  {previewReflectionContent ? (
+                    <div className="min-h-[80px] p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      {newReflectionContent ? (
+                        <MarkdownRenderer content={newReflectionContent} />
+                      ) : (
+                        <p className="text-gray-400 text-sm">내용이 없습니다.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <textarea
+                      value={newReflectionContent}
+                      onChange={(e) => {
+                        setNewReflectionContent(e.target.value);
+                        // 자동 크기 조절
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                      }}
+                      placeholder="무엇에 대해 회고할건지 입력하세요... (예: 오늘 프로젝트 발표를 했다)
 
 마크다운 문법 사용 가능: **굵은글씨**, *기울임*, 목록, 체크박스 등"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
-                    rows={3}
-                    style={{ minHeight: '80px' }}
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-sm font-medium text-green-700">잘한점</label>
-                    <button
-                      onClick={() => setPreviewGoodPoints(!previewGoodPoints)}
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-green-100 hover:bg-green-200 rounded transition-colors"
-                    >
-                      <Eye className="w-3 h-3" />
-                      {previewGoodPoints ? '편집' : '미리보기'}
-                    </button>
-                  </div>
-                  {previewGoodPoints ? (
-                    <div className="min-h-[80px] p-3 border border-green-200 rounded-lg bg-green-50">
-                      {newGoodPoints ? (
-                        <MarkdownRenderer content={newGoodPoints} />
-                      ) : (
-                        <p className="text-gray-400 text-sm">내용이 없습니다.</p>
-                      )}
-                    </div>
-                  ) : (
-                    <textarea
-                      value={newGoodPoints}
-                      onChange={(e) => {
-                        setNewGoodPoints(e.target.value);
-                        // 자동 크기 조절
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
-                      }}
-                      placeholder="이 일에서 잘했던 점은... (마크다운 문법 사용 가능)"
-                      className="w-full px-3 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none overflow-hidden"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
                       rows={3}
                       style={{ minHeight: '80px' }}
                     />
                   )}
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-sm font-medium text-orange-700">아쉬운점</label>
-                    <button
-                      onClick={() => setPreviewImprovePoints(!previewImprovePoints)}
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 rounded transition-colors"
-                    >
-                      <Eye className="w-3 h-3" />
-                      {previewImprovePoints ? '편집' : '미리보기'}
-                    </button>
-                  </div>
-                  {previewImprovePoints ? (
-                    <div className="min-h-[80px] p-3 border border-orange-200 rounded-lg bg-orange-50">
-                      {newImprovePoints ? (
-                        <MarkdownRenderer content={newImprovePoints} />
-                      ) : (
-                        <p className="text-gray-400 text-sm">내용이 없습니다.</p>
-                      )}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-green-700">잘한점</label>
+                      <button
+                        onClick={() => setPreviewGoodPoints(!previewGoodPoints)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-green-100 hover:bg-green-200 rounded transition-colors"
+                      >
+                        <Eye className="w-3 h-3" />
+                        {previewGoodPoints ? '편집' : '미리보기'}
+                      </button>
                     </div>
-                  ) : (
-                    <textarea
-                      value={newImprovePoints}
-                      onChange={(e) => {
-                        setNewImprovePoints(e.target.value);
-                        // 자동 크기 조절
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
-                      }}
-                      placeholder="이 일에서 아쉬움이 남는 점은... (마크다운 문법 사용 가능)"
-                      className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none overflow-hidden"
-                      rows={3}
-                      style={{ minHeight: '80px' }}
-                    />
-                  )}
-                </div>
-              </div>
+                    {previewGoodPoints ? (
+                      <div className="min-h-[80px] p-3 border border-green-200 rounded-lg bg-green-50">
+                        {newGoodPoints ? (
+                          <MarkdownRenderer content={newGoodPoints} />
+                        ) : (
+                          <p className="text-gray-400 text-sm">내용이 없습니다.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <textarea
+                        value={newGoodPoints}
+                        onChange={(e) => {
+                          setNewGoodPoints(e.target.value);
+                          // 자동 크기 조절
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                        placeholder="이 일에서 잘했던 점은... (마크다운 문법 사용 가능)"
+                        className="w-full px-3 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none overflow-hidden"
+                        rows={3}
+                        style={{ minHeight: '80px' }}
+                      />
+                    )}
+                  </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={handleAddReflection}
-                  disabled={!newReflectionContent.trim()}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${newReflectionContent.trim()
-                    ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                >
-                  <Plus className="w-4 h-4" />
-                  회고 추가
-                </button>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-orange-700">아쉬운점</label>
+                      <button
+                        onClick={() => setPreviewImprovePoints(!previewImprovePoints)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 rounded transition-colors"
+                      >
+                        <Eye className="w-3 h-3" />
+                        {previewImprovePoints ? '편집' : '미리보기'}
+                      </button>
+                    </div>
+                    {previewImprovePoints ? (
+                      <div className="min-h-[80px] p-3 border border-orange-200 rounded-lg bg-orange-50">
+                        {newImprovePoints ? (
+                          <MarkdownRenderer content={newImprovePoints} />
+                        ) : (
+                          <p className="text-gray-400 text-sm">내용이 없습니다.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <textarea
+                        value={newImprovePoints}
+                        onChange={(e) => {
+                          setNewImprovePoints(e.target.value);
+                          // 자동 크기 조절
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                        placeholder="이 일에서 아쉬움이 남는 점은... (마크다운 문법 사용 가능)"
+                        className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none overflow-hidden"
+                        rows={3}
+                        style={{ minHeight: '80px' }}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleAddReflection}
+                    disabled={!newReflectionContent.trim()}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${newReflectionContent.trim()
+                      ? 'bg-blue-500 text-white hover:bg-blue-600'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    회고 추가
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
           )}
 
           {/* 회고 목록 */}
@@ -665,65 +665,65 @@ const RetrospectiveFeature: React.FC = () => {
           {/* 액션 추가 - 편집 모드에서만 표시 */}
           {!isViewerMode && (
             <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">새 액션 아이템</label>
-              <button
-                onClick={() => setPreviewActionContent(!previewActionContent)}
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-              >
-                <Eye className="w-3 h-3" />
-                {previewActionContent ? '편집' : '미리보기'}
-              </button>
-            </div>
-            {previewActionContent ? (
-              <div className="space-y-2">
-                <div className="min-h-[60px] p-3 border border-gray-200 rounded-lg bg-gray-50">
-                  {newActionContent ? (
-                    <MarkdownRenderer content={newActionContent} />
-                  ) : (
-                    <p className="text-gray-400 text-sm">내용이 없습니다.</p>
-                  )}
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">새 액션 아이템</label>
+                <button
+                  onClick={() => setPreviewActionContent(!previewActionContent)}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                >
+                  <Eye className="w-3 h-3" />
+                  {previewActionContent ? '편집' : '미리보기'}
+                </button>
+              </div>
+              {previewActionContent ? (
+                <div className="space-y-2">
+                  <div className="min-h-[60px] p-3 border border-gray-200 rounded-lg bg-gray-50">
+                    {newActionContent ? (
+                      <MarkdownRenderer content={newActionContent} />
+                    ) : (
+                      <p className="text-gray-400 text-sm">내용이 없습니다.</p>
+                    )}
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleAddAction}
+                      disabled={!newActionContent.trim()}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${newActionContent.trim()
+                        ? 'bg-green-500 text-white hover:bg-green-600'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      추가
+                    </button>
+                  </div>
                 </div>
-                <div className="flex justify-end">
+              ) : (
+                <div className="flex gap-2">
+                  <textarea
+                    value={newActionContent}
+                    onChange={(e) => {
+                      setNewActionContent(e.target.value);
+                      // 자동 크기 조절
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    placeholder="다음 회고까지 해볼 수 있는 구체적인 행동을 입력하세요... (마크다운 문법 사용 가능)"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
+                    rows={2}
+                    style={{ minHeight: '60px' }}
+                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleAddAction()}
+                  />
                   <button
                     onClick={handleAddAction}
-                    disabled={!newActionContent.trim()}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${newActionContent.trim()
-                      ? 'bg-green-500 text-white hover:bg-green-600'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium self-end"
                   >
                     <Plus className="w-4 h-4" />
                     추가
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <textarea
-                  value={newActionContent}
-                  onChange={(e) => {
-                    setNewActionContent(e.target.value);
-                    // 자동 크기 조절
-                    e.target.style.height = 'auto';
-                    e.target.style.height = e.target.scrollHeight + 'px';
-                  }}
-                  placeholder="다음 회고까지 해볼 수 있는 구체적인 행동을 입력하세요... (마크다운 문법 사용 가능)"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
-                  rows={2}
-                  style={{ minHeight: '60px' }}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleAddAction()}
-                />
-                <button
-                  onClick={handleAddAction}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium self-end"
-                >
-                  <Plus className="w-4 h-4" />
-                  추가
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
           )}
 
           {/* 액션 목록 */}
