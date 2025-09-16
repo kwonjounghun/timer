@@ -11,7 +11,8 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
@@ -23,6 +24,36 @@ export const COLLECTIONS = {
   TODOS: 'todos',
   SETTINGS: 'settings',
   RETROSPECTIVES: 'retrospectives'
+};
+
+// Firebase Timestamp를 안전하게 Date로 변환하는 유틸리티 함수
+export const safeTimestampToDate = (timestamp) => {
+  if (!timestamp) return new Date();
+  
+  // Firebase Timestamp 객체인 경우
+  if (timestamp && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  
+  // 이미 Date 객체인 경우
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  
+  // 문자열이나 숫자인 경우
+  if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    const date = new Date(timestamp);
+    // 유효한 Date 객체인지 확인
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid timestamp value:', timestamp, 'falling back to current date');
+      return new Date();
+    }
+    return date;
+  }
+  
+  // 기타 경우 현재 시간 반환
+  console.warn('Unknown timestamp type:', typeof timestamp, timestamp, 'falling back to current date');
+  return new Date();
 };
 
 export const testFirebaseConnection = async () => {

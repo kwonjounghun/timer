@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { hybridStorage } from '../../../utils/hybridStorage';
+import { safeTimestampToDate } from '../../../utils/storage/firebaseUtils';
 import type { DailyRetrospective, ReflectionItem, ActionItem, PreviousGoalCheck } from '../../../types/retrospective';
 
 export interface RetrospectiveLogic {
@@ -60,15 +61,15 @@ export const useRetrospectiveLogic = (): RetrospectiveLogic => {
         // 기존 회고가 있으면 로드
         setCurrentRetrospective({
           ...retrospective,
-          createdAt: new Date(retrospective.createdAt),
-          updatedAt: new Date(retrospective.updatedAt),
+          createdAt: safeTimestampToDate(retrospective.createdAt),
+          updatedAt: safeTimestampToDate(retrospective.updatedAt),
           reflections: retrospective.reflections.map((item: any) => ({
             ...item,
-            createdAt: new Date(item.createdAt)
+            createdAt: safeTimestampToDate(item.createdAt)
           })),
           nextActions: retrospective.nextActions.map((item: any) => ({
             ...item,
-            createdAt: new Date(item.createdAt)
+            createdAt: safeTimestampToDate(item.createdAt)
           }))
         });
       } else {
