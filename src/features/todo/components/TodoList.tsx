@@ -115,9 +115,11 @@ export const TodoList: React.FC<TodoListProps> = ({
             key={todo.id}
             className={`
               border rounded-lg p-4 transition-all duration-200
-              ${todo.completed
-                ? 'bg-gray-50 border-gray-200 opacity-75'
-                : 'bg-white border-gray-200 hover:border-gray-300'
+              ${todo._isLoading
+                ? 'bg-blue-50 border-blue-200 opacity-75'
+                : todo.completed
+                  ? 'bg-gray-50 border-gray-200 opacity-75'
+                  : 'bg-white border-gray-200 hover:border-gray-300'
               }
             `}
           >
@@ -216,20 +218,33 @@ export const TodoList: React.FC<TodoListProps> = ({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => onToggleTodo(todo.id)}
+                    disabled={todo._isLoading}
                     className={`
                       flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
-                      ${todo.completed
-                        ? 'bg-green-500 border-green-500 text-white'
-                        : 'border-gray-300 hover:border-green-500'
+                      ${todo._isLoading
+                        ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                        : todo.completed
+                          ? 'bg-green-500 border-green-500 text-white'
+                          : 'border-gray-300 hover:border-green-500'
                       }
                     `}
+                    title={todo._isLoading ? '저장 중...' : todo.completed ? '완료 취소' : '완료 처리'}
                   >
-                    {todo.completed && <Check size={14} />}
+                    {todo._isLoading ? (
+                      <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : todo.completed ? (
+                      <Check size={14} />
+                    ) : null}
                   </button>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      {todo.completed && (
+                      {todo._isLoading && (
+                        <span className="text-xs text-blue-600 font-medium">
+                          저장 중...
+                        </span>
+                      )}
+                      {!todo._isLoading && todo.completed && (
                         <span className="text-xs text-gray-500">
                           완료: {(() => {
                             const date = new Date(todo.completedAt!);
@@ -290,15 +305,29 @@ export const TodoList: React.FC<TodoListProps> = ({
 
                     <button
                       onClick={() => startEdit(todo)}
-                      className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
-                      title="편집"
+                      disabled={todo._isLoading}
+                      className={`
+                        p-2 rounded transition-colors
+                        ${todo._isLoading
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50'
+                        }
+                      `}
+                      title={todo._isLoading ? '저장 중...' : '편집'}
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       onClick={() => onDeleteTodo(todo.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                      title="삭제"
+                      disabled={todo._isLoading}
+                      className={`
+                        p-2 rounded transition-colors
+                        ${todo._isLoading
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                        }
+                      `}
+                      title={todo._isLoading ? '저장 중...' : '삭제'}
                     >
                       <Trash2 size={16} />
                     </button>
