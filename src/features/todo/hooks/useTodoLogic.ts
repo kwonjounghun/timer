@@ -116,6 +116,12 @@ export const useTodoLogic = (): TodoLogic => {
       return;
     }
 
+    // 로딩 중인 할일은 처리하지 않음
+    if (todoToUpdate._isLoading) {
+      console.warn('로딩 중인 할일은 조작할 수 없습니다:', id);
+      return;
+    }
+
     const updatedTodo = {
       ...todoToUpdate,
       completed: !todoToUpdate.completed,
@@ -180,6 +186,12 @@ export const useTodoLogic = (): TodoLogic => {
     const originalTodo = todos.find(todo => todo.id === id);
     if (!originalTodo) {
       console.warn('업데이트할 할일을 찾을 수 없음:', id);
+      return;
+    }
+
+    // 로딩 중인 할일은 처리하지 않음
+    if (originalTodo._isLoading) {
+      console.warn('로딩 중인 할일은 조작할 수 없습니다:', id);
       return;
     }
 

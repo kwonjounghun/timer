@@ -98,6 +98,12 @@ export const updateDocument = async (collectionName, docId, updateData) => {
         updatedAt: serverTimestamp()
       });
     } else {
+      // 할일의 경우 존재하지 않으면 에러를 던짐 (중복 생성 방지)
+      if (collectionName === COLLECTIONS.TODOS) {
+        throw new Error(`할일 ID ${docId}가 존재하지 않습니다.`);
+      }
+      
+      // 다른 컬렉션의 경우 기존 로직 유지
       console.warn(`${collectionName} 문서 ${docId}가 존재하지 않습니다. 새로 생성합니다.`);
       await setDoc(docRef, {
         ...updateData,
