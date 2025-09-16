@@ -85,6 +85,9 @@ export const createDocument = async (collectionName, data) => {
     if (processedData.createdAt instanceof Date) {
       processedData.createdAt = serverTimestamp();
     }
+    if (processedData.updatedAt instanceof Date) {
+      processedData.updatedAt = serverTimestamp();
+    }
 
     const docRef = await addDoc(collection(db, collectionName), {
       ...processedData,
@@ -111,6 +114,9 @@ export const updateDocument = async (collectionName, docId, updateData) => {
       }
       if (processedUpdateData.createdAt instanceof Date) {
         processedUpdateData.createdAt = serverTimestamp();
+      }
+      if (processedUpdateData.updatedAt instanceof Date) {
+        processedUpdateData.updatedAt = serverTimestamp();
       }
 
       await updateDoc(docRef, {
