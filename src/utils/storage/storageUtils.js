@@ -3,6 +3,12 @@ import { auth } from '../../config/firebase';
 
 export const checkPermission = (operation) => {
   const storageType = getStorageType();
+  
+  console.log(`권한 체크 - ${operation}:`, {
+    storageType,
+    hasFirebaseConfig: storageType === 'firebase',
+    currentUser: storageType === 'firebase' ? auth.currentUser : null
+  });
 
   if (storageType === 'localStorage') {
     return true;

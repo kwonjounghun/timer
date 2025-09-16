@@ -75,8 +75,17 @@ export const simpleFirebaseTest = async () => {
 
 export const createDocument = async (collectionName, data) => {
   try {
+    // Date 객체를 Timestamp로 변환
+    const processedData = { ...data };
+    if (processedData.completedAt instanceof Date) {
+      processedData.completedAt = serverTimestamp();
+    }
+    if (processedData.createdAt instanceof Date) {
+      processedData.createdAt = serverTimestamp();
+    }
+
     const docRef = await addDoc(collection(db, collectionName), {
-      ...data,
+      ...processedData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -93,8 +102,17 @@ export const updateDocument = async (collectionName, docId, updateData) => {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
+      // Date 객체를 Timestamp로 변환
+      const processedUpdateData = { ...updateData };
+      if (processedUpdateData.completedAt instanceof Date) {
+        processedUpdateData.completedAt = serverTimestamp();
+      }
+      if (processedUpdateData.createdAt instanceof Date) {
+        processedUpdateData.createdAt = serverTimestamp();
+      }
+
       await updateDoc(docRef, {
-        ...updateData,
+        ...processedUpdateData,
         updatedAt: serverTimestamp()
       });
     } else {

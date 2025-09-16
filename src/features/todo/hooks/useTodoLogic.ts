@@ -135,18 +135,32 @@ export const useTodoLogic = (): TodoLogic => {
 
     // 저장소에 저장
     try {
+      console.log('할일 업데이트 시도:', {
+        id,
+        completed: updatedTodo.completed,
+        completedAt: updatedTodo.completedAt,
+        storageType: hybridStorage.getStorageInfo()
+      });
+      
       await hybridStorage.updateTodo(id, {
         completed: updatedTodo.completed,
         completedAt: updatedTodo.completedAt,
       });
+      
+      console.log('할일 업데이트 성공:', id);
     } catch (error) {
       console.error('할일 업데이트 실패:', error);
+      console.error('에러 상세:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       // 실패 시 상태 되돌리기
       setTodos(prev => prev.map(todo =>
         todo.id === id ? todoToUpdate : todo
       ));
       // 사용자에게 알림
-      alert('할일 상태 업데이트에 실패했습니다. 다시 시도해주세요.');
+      alert(`할일 상태 업데이트에 실패했습니다: ${error.message}`);
     }
   }, [todos]);
 
@@ -204,15 +218,28 @@ export const useTodoLogic = (): TodoLogic => {
 
     // 저장소에 저장
     try {
+      console.log('할일 업데이트 시도:', {
+        id,
+        updates,
+        storageType: hybridStorage.getStorageInfo()
+      });
+      
       await hybridStorage.updateTodo(id, updates);
+      
+      console.log('할일 업데이트 성공:', id);
     } catch (error) {
       console.error('할일 업데이트 실패:', error);
+      console.error('에러 상세:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       // 실패 시 원래 상태로 되돌리기
       setTodos(prev => prev.map(todo =>
         todo.id === id ? originalTodo : todo
       ));
       // 사용자에게 알림
-      alert('할일 업데이트에 실패했습니다. 다시 시도해주세요.');
+      alert(`할일 업데이트에 실패했습니다: ${error.message}`);
     }
   }, [todos]);
 
