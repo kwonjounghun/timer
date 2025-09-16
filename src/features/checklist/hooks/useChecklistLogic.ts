@@ -5,6 +5,7 @@ import { formatMarkdown, hasCodeBlocks } from '../../../utils/markdownFormatter'
 import { hybridStorage } from '../../../utils/hybridStorage';
 
 export interface ChecklistData {
+  id?: string; // ID 추가
   date: string;
   data: Record<string, Record<number, string>>;
 }
@@ -28,6 +29,8 @@ export interface ChecklistLogic {
   editMode: boolean;
   hasData: boolean;
   storageInfo: any;
+  isSaving: boolean;
+  hasUnsavedChanges: boolean;
 
   // Actions
   toggleSection: (sectionKey: string) => void;
@@ -37,6 +40,7 @@ export interface ChecklistLogic {
   toggleEditMode: () => void;
   completeEdit: () => void;
   cancelEdit: () => void;
+  saveChecklist: (date: string) => Promise<void>;
 }
 
 export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
@@ -50,9 +54,8 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
   });
   const [previewState, setPreviewState] = useState<PreviewState>({});
   const [editMode, setEditMode] = useState(false);
-
-  // 디바운싱을 위한 ref
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Storage info
   const storageInfo = getStorageInfo();
@@ -77,13 +80,13 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     }));
   }, []);
 
-  // Update answer with debouncing
+  // Update answer (no auto-save)
   const updateAnswer = useCallback((date: string, sectionKey: string, questionIndex: number, value: string) => {
-    // 즉시 로컬 상태 업데이트 (UI 반영)
     setChecklistData(prev => {
       const newData = {
         ...prev,
         [date]: {
+          ...prev[date],
           date,
           data: {
             ...prev[date]?.data,
@@ -94,25 +97,11 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
           }
         }
       };
-
-      // 기존 타이머가 있다면 취소
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
-      // 500ms 후에 저장 실행
-      saveTimeoutRef.current = setTimeout(async () => {
-        try {
-          const checklistToSave = newData[date];
-          await hybridStorage.saveDailyChecklist(checklistToSave);
-        } catch (error) {
-          console.error('체크리스트 저장 실패:', error);
-        }
-        saveTimeoutRef.current = null;
-      }, 500);
-
       return newData;
     });
+
+    // 변경사항이 있음을 표시
+    setHasUnsavedChanges(true);
   }, []);
 
   // Format and update answer with code formatting
@@ -187,6 +176,41 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     // Here you could revert changes if needed
   }, []);
 
+  // Manual save function
+  const saveChecklist = useCallback(async (date: string) => {
+    const checklistToSave = checklistData[date];
+    if (!checklistToSave) {
+      console.warn('저장할 체크리스트 데이터가 없습니다.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // 기존 ID가 있으면 업데이트, 없으면 새로 생성
+      if (checklistToSave.id) {
+        await hybridStorage.updateDailyChecklist(checklistToSave.id, checklistToSave);
+      } else {
+        // 새로 생성하고 ID를 받아서 상태 업데이트
+        const newId = await hybridStorage.saveDailyChecklist(checklistToSave);
+        setChecklistData(currentData => ({
+          ...currentData,
+          [date]: {
+            ...currentData[date],
+            id: newId
+          }
+        }));
+      }
+
+      // 저장 완료 후 변경사항 플래그 리셋
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('체크리스트 저장 실패:', error);
+      throw error; // 호출하는 곳에서 에러 처리할 수 있도록
+    } finally {
+      setIsSaving(false);
+    }
+  }, [checklistData]);
+
   // Load data from localStorage on mount only
   useEffect(() => {
     const loadChecklistData = async () => {
@@ -206,16 +230,10 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     loadChecklistData();
   }, []); // 컴포넌트 마운트 시에만 로드
 
-  // 컴포넌트 언마운트 시 타이머 정리
+  // 데이터가 로드된 후 변경사항 플래그 초기화
   useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Remove the automatic save effect since we're using hybrid storage for individual operations
+    setHasUnsavedChanges(false);
+  }, [selectedDate]);
 
   return {
     // State
@@ -225,6 +243,8 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     editMode,
     hasData,
     storageInfo,
+    isSaving,
+    hasUnsavedChanges,
 
     // Actions
     toggleSection,
@@ -234,5 +254,6 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     toggleEditMode,
     completeEdit,
     cancelEdit,
+    saveChecklist,
   };
 };
