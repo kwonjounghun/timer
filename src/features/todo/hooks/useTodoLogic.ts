@@ -20,6 +20,7 @@ export interface TodoLogic {
   updateTodo: (id: string, updates: Partial<Omit<TodoItem, 'id' | 'createdAt'>>) => void;
   clearCompleted: () => void;
   getStats: () => { total: number; completed: number; pending: number };
+  refreshTodos: () => Promise<void>;
 }
 
 export const useTodoLogic = (): TodoLogic => {
@@ -30,6 +31,8 @@ export const useTodoLogic = (): TodoLogic => {
     const loadTodos = async () => {
       try {
         const todos = await hybridStorage.getTodos();
+        console.log('로드된 할일 데이터:', todos);
+        
         const parsedTodos = todos.map((todo: any) => {
           const createdAt = new Date(todo.createdAt);
           const completedAt = todo.completedAt ? new Date(todo.completedAt) : undefined;
@@ -43,6 +46,8 @@ export const useTodoLogic = (): TodoLogic => {
             completedAt: completedAt && !isNaN(completedAt.getTime()) ? completedAt : undefined,
           };
         });
+        
+        console.log('파싱된 할일 데이터:', parsedTodos);
         setTodos(parsedTodos);
       } catch (error) {
         console.error('Failed to load todos:', error);
@@ -155,6 +160,16 @@ export const useTodoLogic = (): TodoLogic => {
         code: error.code,
         stack: error.stack
       });
+      
+      // Firebase에서 문서가 존재하지 않는 경우 처리
+      if (error.message.includes('존재하지 않습니다')) {
+        console.warn('Firebase에 존재하지 않는 할일을 UI에서 제거합니다:', id);
+        // UI에서 해당 할일 제거
+        setTodos(prev => prev.filter(todo => todo.id !== id));
+        alert('해당 할일이 서버에 존재하지 않아 목록에서 제거되었습니다.');
+        return;
+      }
+      
       // 실패 시 상태 되돌리기
       setTodos(prev => prev.map(todo =>
         todo.id === id ? todoToUpdate : todo
@@ -234,6 +249,16 @@ export const useTodoLogic = (): TodoLogic => {
         code: error.code,
         stack: error.stack
       });
+      
+      // Firebase에서 문서가 존재하지 않는 경우 처리
+      if (error.message.includes('존재하지 않습니다')) {
+        console.warn('Firebase에 존재하지 않는 할일을 UI에서 제거합니다:', id);
+        // UI에서 해당 할일 제거
+        setTodos(prev => prev.filter(todo => todo.id !== id));
+        alert('해당 할일이 서버에 존재하지 않아 목록에서 제거되었습니다.');
+        return;
+      }
+      
       // 실패 시 원래 상태로 되돌리기
       setTodos(prev => prev.map(todo =>
         todo.id === id ? originalTodo : todo
@@ -266,6 +291,34 @@ export const useTodoLogic = (): TodoLogic => {
     return { total, completed, pending };
   }, [todos]);
 
+  // Refresh todos from storage
+  const refreshTodos = useCallback(async () => {
+    try {
+      console.log('할일 데이터 새로고침 시작...');
+      const todos = await hybridStorage.getTodos();
+      console.log('새로고침된 할일 데이터:', todos);
+      
+      const parsedTodos = todos.map((todo: any) => {
+        const createdAt = new Date(todo.createdAt);
+        const completedAt = todo.completedAt ? new Date(todo.completedAt) : undefined;
+
+        return {
+          ...todo,
+          // 기존 데이터와의 호환성을 위한 마이그레이션
+          title: todo.title || todo.text || '제목 없음',
+          content: todo.content || '',
+          createdAt: isNaN(createdAt.getTime()) ? new Date() : createdAt,
+          completedAt: completedAt && !isNaN(completedAt.getTime()) ? completedAt : undefined,
+        };
+      });
+      
+      setTodos(parsedTodos);
+      console.log('할일 데이터 새로고침 완료');
+    } catch (error) {
+      console.error('할일 데이터 새로고침 실패:', error);
+    }
+  }, []);
+
   return {
     todos,
     addTodo,
@@ -274,5 +327,6 @@ export const useTodoLogic = (): TodoLogic => {
     updateTodo,
     clearCompleted,
     getStats,
+    refreshTodos,
   };
 };

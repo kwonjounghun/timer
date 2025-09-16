@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTodoLogic } from './hooks/useTodoLogic';
 import { TodoInput } from './components/TodoInput';
 import { TodoList } from './components/TodoList';
-import { Plus } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 
 export const TodoFeature: React.FC = () => {
   const todoLogic = useTodoLogic();
@@ -19,7 +19,17 @@ export const TodoFeature: React.FC = () => {
         <div className="flex items-center justify-between mb-2">
           <div className="flex-1"></div>
           <h1 className="text-3xl font-bold text-gray-800">할 일 관리</h1>
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end gap-3">
+            {/* 새로고침 버튼 */}
+            <button
+              onClick={todoLogic.refreshTodos}
+              className="flex items-center gap-2 px-4 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors shadow-lg"
+              title="할일 목록 새로고침"
+            >
+              <RefreshCw size={20} />
+              새로고침
+            </button>
+            
             {/* 할 일 추가 버튼 */}
             {!showAddForm && (
               <button
