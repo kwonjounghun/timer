@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/timer/', // GitHub Pages 서브 디렉토리 설정
   server: {
-    port: 3001,
+    port: 3000,
     open: true
   },
   resolve: {

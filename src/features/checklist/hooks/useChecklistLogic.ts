@@ -30,6 +30,7 @@ export interface ChecklistLogic {
   storageInfo: any;
   isSaving: boolean;
   hasUnsavedChanges: boolean;
+  saveError: string | null;
 
   // Actions
   toggleSection: (sectionKey: string) => void;
@@ -54,6 +55,7 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
   const [editMode, setEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Storage info
   const storageInfo = getStorageInfo();
@@ -164,11 +166,6 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     });
   }, [checklistData, selectedDate]);
 
-  const completeEdit = useCallback(() => {
-    setEditMode(false);
-    // Here you could add persistence logic
-  }, []);
-
   const cancelEdit = useCallback(() => {
     setEditMode(false);
     // Here you could revert changes if needed
@@ -209,6 +206,22 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     }
   }, [checklistData]);
 
+  const completeEdit = useCallback(async () => {
+    try {
+      setSaveError(null);
+      // 변경사항이 있으면 저장
+      if (hasUnsavedChanges) {
+        await saveChecklist(selectedDate);
+      }
+      setEditMode(false);
+    } catch (error) {
+      console.error('체크리스트 저장 중 오류 발생:', error);
+      setSaveError(error instanceof Error ? error.message : '저장 중 오류가 발생했습니다.');
+      // 저장 실패 시에도 편집 모드는 종료 (사용자 경험을 위해)
+      setEditMode(false);
+    }
+  }, [hasUnsavedChanges, saveChecklist, selectedDate]);
+
   // Load data from localStorage on mount only
   useEffect(() => {
     const loadChecklistData = async () => {
@@ -243,6 +256,7 @@ export const useChecklistLogic = (selectedDate: string): ChecklistLogic => {
     storageInfo,
     isSaving,
     hasUnsavedChanges,
+    saveError,
 
     // Actions
     toggleSection,

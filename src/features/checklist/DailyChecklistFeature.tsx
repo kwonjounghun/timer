@@ -42,10 +42,15 @@ export const DailyChecklistFeature: React.FC = () => {
                 <>
                   <button
                     onClick={checklistLogic.completeEdit}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    disabled={checklistLogic.isSaving}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      checklistLogic.isSaving 
+                        ? 'bg-gray-400 text-white cursor-not-allowed' 
+                        : 'bg-green-500 text-white hover:bg-green-600'
+                    }`}
                   >
                     <Check size={16} />
-                    완료
+                    {checklistLogic.isSaving ? '저장 중...' : '완료'}
                   </button>
                   <button
                     onClick={checklistLogic.cancelEdit}
@@ -60,6 +65,16 @@ export const DailyChecklistFeature: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Error message */}
+      {checklistLogic.saveError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2 text-red-700">
+            <span className="text-sm font-medium">저장 오류:</span>
+            <span className="text-sm">{checklistLogic.saveError}</span>
+          </div>
+        </div>
+      )}
 
       {/* Checklist sections or empty state */}
       {checklistLogic.hasData || checklistLogic.editMode ? (

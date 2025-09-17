@@ -66,20 +66,47 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
   const [timerEndTime, setTimerEndTime] = useState<Date | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastActiveTimeRef = useRef<Date | null>(null);
+
+  // Timer synchronization function
+  const syncTimer = useCallback(() => {
+    if (!timerStartTime || !timerState.isRunning) return;
+
+    const now = new Date();
+    const elapsed = Math.floor((now.getTime() - timerStartTime.getTime()) / 1000);
+    const remaining = Math.max(0, 10 * 60 - elapsed);
+
+    setTimerState(prev => {
+      if (remaining <= 0) {
+        // 타이머 완료
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current);
+          timerIntervalRef.current = null;
+        }
+        setTimerEndTime(new Date(timerStartTime.getTime() + 10 * 60 * 1000));
+        setShowReflection(true);
+        playNotification(currentTask);
+        return { ...prev, timeLeft: 0, isRunning: false };
+      }
+      return { ...prev, timeLeft: remaining };
+    });
+  }, [timerStartTime, timerState.isRunning, currentTask, playNotification]);
 
   // Timer Logic
   const startTimer = useCallback(() => {
     if (!currentTask.trim()) return;
 
+    const startTime = new Date();
     setShowTaskInput(false);
-    setTimerStartTime(new Date());
+    setTimerStartTime(startTime);
+    lastActiveTimeRef.current = startTime;
     setTimerState(prev => ({ ...prev, isRunning: true }));
 
     const interval = setInterval(() => {
       setTimerState(prev => {
         if (prev.timeLeft <= 1) {
           clearInterval(interval);
-          setTimerEndTime(new Date());
+          setTimerEndTime(new Date(startTime.getTime() + 10 * 60 * 1000));
           setShowReflection(true);
           playNotification(currentTask);
           return { ...prev, timeLeft: 0, isRunning: false };
@@ -101,9 +128,18 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
 
   const stopTimer = useCallback(() => {
     pauseTimer();
-    setTimerEndTime(new Date());
+    
+    // 종료 시간 설정: 시작 시간 + 10분 또는 현재 시간 중 더 빠른 시간
+    const startTime = timerStartTime || new Date();
+    const expectedEndTime = new Date(startTime.getTime() + 10 * 60 * 1000); // 시작 시간 + 10분
+    const currentTime = new Date();
+    
+    // 현재 시간이 예상 종료 시간보다 빠르면 현재 시간, 아니면 예상 종료 시간
+    const endTime = currentTime < expectedEndTime ? currentTime : expectedEndTime;
+    
+    setTimerEndTime(endTime);
     setShowReflection(true);
-  }, [pauseTimer]);
+  }, [pauseTimer, timerStartTime]);
 
   const resetTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -125,7 +161,15 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
 
   const saveReflection = useCallback(async () => {
     const startTime = timerStartTime || new Date();
-    const endTime = timerEndTime || new Date();
+    let endTime = timerEndTime;
+    
+    // 종료 시간이 설정되지 않았다면 정확한 종료 시간 계산
+    if (!endTime) {
+      const expectedEndTime = new Date(startTime.getTime() + 10 * 60 * 1000);
+      const currentTime = new Date();
+      endTime = currentTime < expectedEndTime ? currentTime : expectedEndTime;
+    }
+    
     const actualTimeSpent = Math.max(0, 10 * 60 - timerState.timeLeft);
 
     const newCycle = {
@@ -169,14 +213,56 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
-  // Cleanup on unmount
+  // Page Visibility API를 사용한 타이머 동기화
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && timerState.isRunning) {
+        // 탭이 다시 활성화되면 타이머 동기화
+        console.log('Tab became active, syncing timer...');
+        syncTimer();
+      } else if (document.visibilityState === 'hidden') {
+        // 탭이 비활성화되면 현재 시간 기록
+        lastActiveTimeRef.current = new Date();
+      }
+    };
+
+    // 페이지 포커스/블러 이벤트도 처리
+    const handleFocus = () => {
+      if (timerState.isRunning) {
+        console.log('Window focused, syncing timer...');
+        syncTimer();
+      }
+    };
+
+    const handleBlur = () => {
+      lastActiveTimeRef.current = new Date();
+    };
+
+    // 이벤트 리스너 등록
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+
+    // 정기적인 동기화 (5초마다)
+    const syncInterval = setInterval(() => {
+      if (timerState.isRunning && document.visibilityState === 'visible') {
+        syncTimer();
+      }
+    }, 5000);
+
     return () => {
+      // 이벤트 리스너 정리
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+      clearInterval(syncInterval);
+      
+      // 타이머 interval 정리
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, []);
+  }, [timerState.isRunning, syncTimer]);
 
   return {
     // State
