@@ -66,9 +66,22 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
   const [timerEndTime, setTimerEndTime] = useState<Date | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastActiveTimeRef = useRef<Date | null>(null);
 
-  // Timer synchronization function
+  // 모든 interval 정리 함수
+  const clearAllIntervals = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    if (syncIntervalRef.current) {
+      clearInterval(syncIntervalRef.current);
+      syncIntervalRef.current = null;
+    }
+  }, []);
+
+  // Timer synchronization function (UI 업데이트 없이 시간만 보정)
   const syncTimer = useCallback(() => {
     if (!timerStartTime || !timerState.isRunning) return;
 
@@ -76,21 +89,17 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     const elapsed = Math.floor((now.getTime() - timerStartTime.getTime()) / 1000);
     const remaining = Math.max(0, 10 * 60 - elapsed);
 
-    setTimerState(prev => {
-      if (remaining <= 0) {
-        // 타이머 완료
-        if (timerIntervalRef.current) {
-          clearInterval(timerIntervalRef.current);
-          timerIntervalRef.current = null;
-        }
-        setTimerEndTime(new Date(timerStartTime.getTime() + 10 * 60 * 1000));
-        setShowReflection(true);
-        playNotification(currentTask);
-        return { ...prev, timeLeft: 0, isRunning: false };
-      }
-      return { ...prev, timeLeft: remaining };
-    });
-  }, [timerStartTime, timerState.isRunning, currentTask, playNotification]);
+    // 동기화는 5초마다만 하되, 타이머 완료 시에만 상태 업데이트
+    if (remaining <= 0) {
+      // 타이머 완료 - 모든 interval 정리
+      clearAllIntervals();
+      setTimerEndTime(new Date(timerStartTime.getTime() + 10 * 60 * 1000));
+      setShowReflection(true);
+      playNotification(currentTask);
+      setTimerState(prev => ({ ...prev, timeLeft: 0, isRunning: false }));
+    }
+    // 완료되지 않은 경우에는 UI는 1초 interval이 처리하도록 함
+  }, [timerStartTime, timerState.isRunning, currentTask, playNotification, clearAllIntervals]);
 
   // Timer Logic
   const startTimer = useCallback(() => {
@@ -102,10 +111,12 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     lastActiveTimeRef.current = startTime;
     setTimerState(prev => ({ ...prev, isRunning: true }));
 
-    const interval = setInterval(() => {
+    // UI 업데이트용 interval (1초마다)
+    const uiInterval = setInterval(() => {
       setTimerState(prev => {
         if (prev.timeLeft <= 1) {
-          clearInterval(interval);
+          // 타이머 완료 - 모든 interval 정리
+          clearAllIntervals();
           setTimerEndTime(new Date(startTime.getTime() + 10 * 60 * 1000));
           setShowReflection(true);
           playNotification(currentTask);
@@ -115,16 +126,13 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
       });
     }, 1000);
 
-    timerIntervalRef.current = interval;
-  }, [currentTask, playNotification]);
+    timerIntervalRef.current = uiInterval;
+  }, [currentTask, playNotification, clearAllIntervals]);
 
   const pauseTimer = useCallback(() => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
+    clearAllIntervals();
     setTimerState(prev => ({ ...prev, isRunning: false }));
-  }, []);
+  }, [clearAllIntervals]);
 
   const stopTimer = useCallback(() => {
     pauseTimer();
@@ -142,10 +150,7 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
   }, [pauseTimer, timerStartTime]);
 
   const resetTimer = useCallback(() => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
+    clearAllIntervals();
     setTimerState({
       timeLeft: 10 * 60,
       isRunning: false,
@@ -157,7 +162,7 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     setReflection({ result: '', distractions: '', thoughts: '' });
     setTimerStartTime(null);
     setTimerEndTime(null);
-  }, []);
+  }, [clearAllIntervals]);
 
   const saveReflection = useCallback(async () => {
     const startTime = timerStartTime || new Date();
@@ -243,26 +248,25 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     window.addEventListener('focus', handleFocus);
     window.addEventListener('blur', handleBlur);
 
-    // 정기적인 동기화 (5초마다)
+    // 정기적인 동기화 (5초마다) - UI 업데이트와 분리
     const syncInterval = setInterval(() => {
       if (timerState.isRunning && document.visibilityState === 'visible') {
         syncTimer();
       }
     }, 5000);
+    
+    syncIntervalRef.current = syncInterval;
 
     return () => {
       // 이벤트 리스너 정리
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
-      clearInterval(syncInterval);
       
-      // 타이머 interval 정리
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
+      // 모든 interval 정리
+      clearAllIntervals();
     };
-  }, [timerState.isRunning, syncTimer]);
+  }, [timerState.isRunning, syncTimer, clearAllIntervals]);
 
   return {
     // State
