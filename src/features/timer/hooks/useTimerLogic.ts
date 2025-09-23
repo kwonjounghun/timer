@@ -81,7 +81,7 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     }
   }, []);
 
-  // Timer synchronization function (UI 업데이트 없이 시간만 보정)
+  // Timer synchronization function (UI 업데이트와 시간 보정)
   const syncTimer = useCallback(() => {
     if (!timerStartTime || !timerState.isRunning) return;
 
@@ -89,7 +89,7 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     const elapsed = Math.floor((now.getTime() - timerStartTime.getTime()) / 1000);
     const remaining = Math.max(0, 10 * 60 - elapsed);
 
-    // 동기화는 5초마다만 하되, 타이머 완료 시에만 상태 업데이트
+    // 타이머 완료 시
     if (remaining <= 0) {
       // 타이머 완료 - 모든 interval 정리
       clearAllIntervals();
@@ -97,8 +97,10 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
       setShowReflection(true);
       playNotification(currentTask);
       setTimerState(prev => ({ ...prev, timeLeft: 0, isRunning: false }));
+    } else {
+      // 진행 중인 경우 UI 상태도 업데이트
+      setTimerState(prev => ({ ...prev, timeLeft: remaining }));
     }
-    // 완료되지 않은 경우에는 UI는 1초 interval이 처리하도록 함
   }, [timerStartTime, timerState.isRunning, currentTask, playNotification, clearAllIntervals]);
 
   // Timer Logic
@@ -111,23 +113,10 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     lastActiveTimeRef.current = startTime;
     setTimerState(prev => ({ ...prev, isRunning: true }));
 
-    // UI 업데이트용 interval (1초마다)
-    const uiInterval = setInterval(() => {
-      setTimerState(prev => {
-        if (prev.timeLeft <= 1) {
-          // 타이머 완료 - 모든 interval 정리
-          clearAllIntervals();
-          setTimerEndTime(new Date(startTime.getTime() + 10 * 60 * 1000));
-          setShowReflection(true);
-          playNotification(currentTask);
-          return { ...prev, timeLeft: 0, isRunning: false };
-        }
-        return { ...prev, timeLeft: prev.timeLeft - 1 };
-      });
-    }, 1000);
-
-    timerIntervalRef.current = uiInterval;
-  }, [currentTask, playNotification, clearAllIntervals]);
+    // UI는 5초마다 동기화로 업데이트되므로 별도 interval 불필요
+    // 즉시 첫 동기화 실행
+    setTimeout(() => syncTimer(), 100);
+  }, [currentTask, syncTimer]);
 
   const pauseTimer = useCallback(() => {
     clearAllIntervals();
@@ -248,12 +237,12 @@ export const useTimerLogic = (selectedDate: string, addCycle?: (cycle: any) => v
     window.addEventListener('focus', handleFocus);
     window.addEventListener('blur', handleBlur);
 
-    // 정기적인 동기화 (5초마다) - UI 업데이트와 분리
+    // 정기적인 동기화 (1초마다) - UI 업데이트와 동기화 통합
     const syncInterval = setInterval(() => {
-      if (timerState.isRunning && document.visibilityState === 'visible') {
+      if (timerState.isRunning) {
         syncTimer();
       }
-    }, 5000);
+    }, 1000);
     
     syncIntervalRef.current = syncInterval;
 
