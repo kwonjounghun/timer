@@ -1,5 +1,5 @@
 /**
- * 스토리지 타입 감지 및 설정
+ * Firebase 설정 확인 (Firebase만 사용)
  */
 
 // Firebase 설정이 있는지 확인
@@ -17,19 +17,18 @@ const hasFirebaseConfig = () => {
   return Object.values(config).every(value => value && value !== 'your_api_key_here');
 };
 
-// 사용할 스토리지 타입 결정
+// Firebase 설정 확인 (항상 Firebase 사용)
 export const getStorageType = () => {
-  return hasFirebaseConfig() ? 'firebase' : 'localStorage';
+  return 'firebase';
 };
 
 // 스토리지 타입 정보 반환
 export const getStorageInfo = () => {
-  const type = getStorageType();
   return {
-    type,
-    isFirebase: type === 'firebase',
-    isLocalStorage: type === 'localStorage',
-    config: type === 'firebase' ? {
+    type: 'firebase',
+    isFirebase: true,
+    isLocalStorage: false,
+    config: hasFirebaseConfig() ? {
       apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
       authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
       projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,

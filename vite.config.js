@@ -5,7 +5,7 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/timer/', // GitHub Pages 서브 디렉토리 설정
+  // base: '/timer/', // 개발 시에는 루트 경로 사용
   server: {
     port: 3000,
     open: true

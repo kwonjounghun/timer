@@ -27,60 +27,31 @@ export const useAuth = (): UseAuthReturn => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 사용자 권한 확인
+  // 사용자 권한 확인 (이메일 화이트리스트 방식 - Firestore 없이)
   const checkUserAuthorization = useCallback(async (user: User): Promise<AuthUser> => {
     try {
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        // 기존 사용자
-        const userData = userDoc.data();
+      // 허용된 이메일 목록 가져오기
+      const allowedEmails = import.meta.env.VITE_ALLOWED_EMAILS?.split(',').map((email: string) => email.trim()) || [];
+      
+      // 사용자 이메일이 화이트리스트에 있는지 확인
+      const isEmailAllowed = user.email && allowedEmails.includes(user.email);
+      
+      if (!isEmailAllowed) {
+        console.log('허용되지 않은 이메일:', user.email);
         return {
           ...user,
-          isAuthorized: true,
-          isFirstUser: userData.isFirstUser || false
+          isAuthorized: false,
+          isFirstUser: false
         };
-      } else {
-        // 새 사용자 - 첫 번째 사용자인지 확인
-        const usersCollectionRef = doc(db, 'system', 'userCount');
-        const usersDoc = await getDoc(usersCollectionRef);
-
-        const isFirstUser = !usersDoc.exists() || usersDoc.data()?.count === 0;
-
-        if (isFirstUser) {
-          // 첫 번째 사용자로 등록
-          await setDoc(userDocRef, {
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            isFirstUser: true,
-            isAuthorized: true,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-
-          // 사용자 카운트 업데이트
-          await setDoc(usersCollectionRef, {
-            count: 1,
-            firstUserId: user.uid,
-            updatedAt: serverTimestamp()
-          });
-
-          return {
-            ...user,
-            isAuthorized: true,
-            isFirstUser: true
-          };
-        } else {
-          // 첫 번째 사용자가 아닌 경우 - 권한 없음
-          return {
-            ...user,
-            isAuthorized: false,
-            isFirstUser: false
-          };
-        }
       }
+
+      // 이메일이 허용된 경우 권한 부여 (Firestore 접근 없이)
+      console.log('허용된 이메일로 로그인:', user.email);
+      return {
+        ...user,
+        isAuthorized: true,
+        isFirstUser: false
+      };
     } catch (error) {
       console.error('사용자 권한 확인 실패:', error);
       return {
