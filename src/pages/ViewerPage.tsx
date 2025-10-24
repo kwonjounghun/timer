@@ -14,6 +14,12 @@ const ViewerPage: React.FC = () => {
         </p>
         <div className="space-y-3">
           <Link
+            to="/timer"
+            className="block w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+          >
+            ⏰ 10분 타이머
+          </Link>
+          <Link
             to="/admin"
             className="block w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
           >

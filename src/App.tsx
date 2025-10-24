@@ -6,6 +6,7 @@ import ViewerPage from './pages/ViewerPage';
 import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import { TimerContextProvider, MinimalTimerPage, firebaseSessionRepository, webNotificationService } from './features/new-timer';
 
 const App: React.FC = () => {
   return (
@@ -14,6 +15,17 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<ViewerPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route 
+            path="/timer" 
+            element={
+              <TimerContextProvider>
+                <MinimalTimerPage
+                  sessionRepository={firebaseSessionRepository}
+                  notificationService={webNotificationService}
+                />
+              </TimerContextProvider>
+            } 
+          />
           <Route 
             path="/admin" 
             element={
