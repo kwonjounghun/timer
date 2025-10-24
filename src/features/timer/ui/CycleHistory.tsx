@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
 import { BookOpen, Edit2, Trash2, Save, X } from 'lucide-react';
 import { MarkdownRenderer } from '../../../components/MarkdownRenderer';
-import { CycleHistory as CycleHistoryType, FocusCycle } from '../hooks/useCycleHistory';
+import { FocusCycle } from '../domain/types';
 
 interface CycleHistoryProps {
-  cycleHistory: CycleHistoryType;
+  sortedCycles: FocusCycle[];
+  expandedCycles: Set<string>;
+  loading: boolean;
+  error: string | null;
+  toggleExpand: (cycleId: string) => void;
+  updateCycle: (cycleId: string, updates: Partial<FocusCycle>) => Promise<void>;
+  deleteCycle: (cycleId: string) => Promise<void>;
   selectedDate: string;
 }
 
-export const CycleHistory: React.FC<CycleHistoryProps> = ({ cycleHistory, selectedDate }) => {
-  const { sortedCycles, expandedCycles, toggleExpand, updateCycle, deleteCycle } = cycleHistory;
+export const CycleHistory: React.FC<CycleHistoryProps> = ({
+  sortedCycles,
+  expandedCycles,
+  loading,
+  error,
+  toggleExpand,
+  updateCycle,
+  deleteCycle,
+  selectedDate,
+}) => {
   const [editingCycle, setEditingCycle] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<FocusCycle>>({});
 
@@ -28,19 +42,49 @@ export const CycleHistory: React.FC<CycleHistoryProps> = ({ cycleHistory, select
     setEditData({});
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingCycle && editData) {
-      updateCycle(editingCycle, editData);
-      setEditingCycle(null);
-      setEditData({});
+      try {
+        await updateCycle(editingCycle, editData);
+        setEditingCycle(null);
+        setEditData({});
+      } catch (error) {
+        console.error('편집 저장 실패:', error);
+      }
     }
   };
 
-  const handleDelete = (cycleId: string) => {
+  const handleDelete = async (cycleId: string) => {
     if (confirm('정말로 이 집중 기록을 삭제하시겠습니까?')) {
-      deleteCycle(cycleId);
+      try {
+        await deleteCycle(cycleId);
+      } catch (error) {
+        console.error('삭제 실패:', error);
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2 text-gray-600">집중 기록을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="text-center text-red-600">
+          <p>집중 기록을 불러오는데 실패했습니다.</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (sortedCycles.length === 0) {
     return null;

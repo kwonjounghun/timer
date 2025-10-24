@@ -1,31 +1,41 @@
 import React from 'react';
 import { Play, Pause, Square, Clock, Target, BookOpen } from 'lucide-react';
-import { useAudio } from '../../../adapters/react/useAudio';
-import { TimerLogic } from '../hooks/useTimerLogic';
+import { TimerState, ReflectionData } from '../domain/types';
 
 interface TimerSectionProps {
-  timerLogic: TimerLogic;
-  selectedDate: string;
+  timerState: TimerState;
+  currentTask: string;
+  reflection: ReflectionData;
+  notificationPermission: string;
+  isNotificationSupported: boolean;
+  setCurrentTask: (task: string) => void;
+  startTimer: () => void;
+  pauseTimer: () => void;
+  stopTimer: () => void;
+  saveReflection: () => Promise<void>;
+  updateReflection: (field: keyof ReflectionData, value: string) => void;
+  formatTime: (seconds: number) => string;
+  requestNotificationPermission: () => Promise<string>;
 }
 
-export const TimerSection: React.FC<TimerSectionProps> = ({ timerLogic, selectedDate }) => {
-  const { requestNotificationPermission, notificationPermission } = useAudio();
-
-  const {
-    timerState,
-    currentTask,
-    showTaskInput,
-    showReflection,
-    reflection,
-    timerStartTime,
-    setCurrentTask,
-    startTimer,
-    pauseTimer,
-    stopTimer,
-    saveReflection,
-    updateReflection,
-    formatTime,
-  } = timerLogic;
+export const TimerSection: React.FC<TimerSectionProps> = ({
+  timerState,
+  currentTask,
+  reflection,
+  notificationPermission,
+  isNotificationSupported,
+  setCurrentTask,
+  startTimer,
+  pauseTimer,
+  stopTimer,
+  saveReflection,
+  updateReflection,
+  formatTime,
+  requestNotificationPermission,
+}) => {
+  const showTaskInput = timerState.status === 'TASK_INPUT';
+  const showReflection = timerState.status === 'REFLECTION';
+  const isRunning = timerState.status === 'RUNNING';
 
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -36,7 +46,7 @@ export const TimerSection: React.FC<TimerSectionProps> = ({ timerLogic, selected
         </h1>
 
         {/* Notification Permission */}
-        {notificationPermission !== 'granted' && (
+        {isNotificationSupported && notificationPermission !== 'granted' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
             <div className="flex items-center justify-center gap-3">
               <span className="text-yellow-700 text-sm">
@@ -93,10 +103,10 @@ export const TimerSection: React.FC<TimerSectionProps> = ({ timerLogic, selected
           <div className="text-xl text-gray-600 mb-4">
             현재 작업: <span className="font-semibold text-blue-600">{currentTask}</span>
           </div>
-          {timerStartTime && (
+          {timerState.startTime && (
             <div className="text-sm text-gray-500 mb-6">
               시작 시간: <span className="font-medium text-gray-700">
-                {timerStartTime.toLocaleTimeString('ko-KR', {
+                {timerState.startTime.toLocaleTimeString('ko-KR', {
                   hour: '2-digit',
                   minute: '2-digit',
                   second: '2-digit'
@@ -106,11 +116,11 @@ export const TimerSection: React.FC<TimerSectionProps> = ({ timerLogic, selected
           )}
           <div className="flex gap-4 justify-center">
             <button
-              onClick={timerState.isRunning ? pauseTimer : startTimer}
+              onClick={isRunning ? pauseTimer : startTimer}
               className="bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2"
             >
-              {timerState.isRunning ? <Pause size={20} /> : <Play size={20} />}
-              {timerState.isRunning ? '일시정지' : '시작'}
+              {isRunning ? <Pause size={20} /> : <Play size={20} />}
+              {isRunning ? '일시정지' : '시작'}
             </button>
             <button
               onClick={stopTimer}
