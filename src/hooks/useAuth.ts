@@ -1,13 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
 import {
-  User,
-  signInWithPopup,
-  signOut,
+  getRedirectResult,
   onAuthStateChanged,
-  UserCredential
+  signInWithRedirect,
+  signOut,
+  User,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, googleProvider, db } from '../config/firebase';
+import { useCallback, useEffect, useState } from 'react';
+import { auth, googleProvider } from '../config/firebase';
 
 interface AuthUser extends User {
   isAuthorized?: boolean;
@@ -31,17 +30,18 @@ export const useAuth = (): UseAuthReturn => {
   const checkUserAuthorization = useCallback(async (user: User): Promise<AuthUser> => {
     try {
       // 허용된 이메일 목록 가져오기
-      const allowedEmails = import.meta.env.VITE_ALLOWED_EMAILS?.split(',').map((email: string) => email.trim()) || [];
-      
+      const allowedEmails =
+        import.meta.env.VITE_ALLOWED_EMAILS?.split(',').map((email: string) => email.trim()) || [];
+
       // 사용자 이메일이 화이트리스트에 있는지 확인
       const isEmailAllowed = user.email && allowedEmails.includes(user.email);
-      
+
       if (!isEmailAllowed) {
         console.log('허용되지 않은 이메일:', user.email);
         return {
           ...user,
           isAuthorized: false,
-          isFirstUser: false
+          isFirstUser: false,
         };
       }
 
@@ -50,32 +50,31 @@ export const useAuth = (): UseAuthReturn => {
       return {
         ...user,
         isAuthorized: true,
-        isFirstUser: false
+        isFirstUser: false,
       };
     } catch (error) {
       console.error('사용자 권한 확인 실패:', error);
       return {
         ...user,
         isAuthorized: false,
-        isFirstUser: false
+        isFirstUser: false,
       };
     }
   }, []);
 
-  // 구글 로그인
+  // 구글 로그인 (리디렉션 방식 사용)
   const signInWithGoogle = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const result: UserCredential = await signInWithPopup(auth, googleProvider);
-      const authorizedUser = await checkUserAuthorization(result.user);
-      setUser(authorizedUser);
+      // 리디렉션 방식으로 로그인 시작 (팝업 대신)
+      await signInWithRedirect(auth, googleProvider);
+      // 리디렉션 후에는 페이지가 다시 로드되므로 여기서는 사용자 상태를 설정하지 않음
     } catch (error) {
       console.error('구글 로그인 실패:', error);
-      throw error;
-    } finally {
       setLoading(false);
+      throw error;
     }
-  }, [checkUserAuthorization]);
+  }, []);
 
   // 로그아웃
   const logout = useCallback(async (): Promise<void> => {
@@ -88,8 +87,25 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, []);
 
-  // 인증 상태 변경 감지
+  // 리디렉션 결과 처리 및 인증 상태 변경 감지
   useEffect(() => {
+    // 리디렉션 결과 처리
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          console.log('리디렉션 로그인 성공:', result.user);
+          const authorizedUser = await checkUserAuthorization(result.user);
+          setUser(authorizedUser);
+        }
+      } catch (error) {
+        console.error('리디렉션 결과 처리 실패:', error);
+      }
+    };
+
+    handleRedirectResult();
+
+    // 인증 상태 변경 감지
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const authorizedUser = await checkUserAuthorization(firebaseUser);
@@ -109,6 +125,6 @@ export const useAuth = (): UseAuthReturn => {
     signInWithGoogle,
     logout,
     isAuthorized: user?.isAuthorized || false,
-    isFirstUser: user?.isFirstUser || false
+    isFirstUser: user?.isFirstUser || false,
   };
 };

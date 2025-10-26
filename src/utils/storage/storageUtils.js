@@ -49,13 +49,12 @@ export const localStorageUtils = {
       console.error('로컬스토리지 삭제 실패:', error);
       return false;
     }
-  }
+  },
 };
 
 export const STORAGE_KEYS = {
-  FOCUS_CYCLES: 'focus_cycles',
   DAILY_CHECKLISTS: 'daily_checklists',
   LINKS: 'linkItems',
   CONCEPTMAP: 'conceptmap-links',
-  TODOS: 'todoItems'
+  TODOS: 'todoItems',
 };

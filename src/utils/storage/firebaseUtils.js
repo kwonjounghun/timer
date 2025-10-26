@@ -1,45 +1,43 @@
 import {
+  addDoc,
   collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
+  deleteDoc,
   doc,
   getDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  setDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
   serverTimestamp,
-  Timestamp
+  setDoc,
+  updateDoc,
+  where,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
 export const COLLECTIONS = {
-  FOCUS_CYCLES: 'focus_cycles',
   DAILY_CHECKLISTS: 'daily_checklists',
   LINKS: 'links',
   CONCEPTMAP: 'conceptmap',
   TODOS: 'todos',
   SETTINGS: 'settings',
-  RETROSPECTIVES: 'retrospectives'
+  RETROSPECTIVES: 'retrospectives',
 };
 
 // Firebase Timestamp를 안전하게 Date로 변환하는 유틸리티 함수
 export const safeTimestampToDate = (timestamp) => {
   if (!timestamp) return new Date();
-  
+
   // Firebase Timestamp 객체인 경우
   if (timestamp && typeof timestamp.toDate === 'function') {
     return timestamp.toDate();
   }
-  
+
   // 이미 Date 객체인 경우
   if (timestamp instanceof Date) {
     return timestamp;
   }
-  
+
   // 문자열이나 숫자인 경우
   if (typeof timestamp === 'string' || typeof timestamp === 'number') {
     const date = new Date(timestamp);
@@ -50,9 +48,14 @@ export const safeTimestampToDate = (timestamp) => {
     }
     return date;
   }
-  
+
   // 기타 경우 현재 시간 반환
-  console.warn('Unknown timestamp type:', typeof timestamp, timestamp, 'falling back to current date');
+  console.warn(
+    'Unknown timestamp type:',
+    typeof timestamp,
+    timestamp,
+    'falling back to current date',
+  );
   return new Date();
 };
 
@@ -61,7 +64,7 @@ export const testFirebaseConnection = async () => {
     console.log('Firebase 연결 테스트 시작...');
     console.log('DB 인스턴스:', db);
 
-    const q = query(collection(db, COLLECTIONS.FOCUS_CYCLES), limit(1));
+    const q = query(collection(db, COLLECTIONS.DAILY_CHECKLISTS), limit(1));
     const querySnapshot = await getDocs(q);
 
     console.log('Firebase 연결 테스트 성공:', querySnapshot);
@@ -69,7 +72,7 @@ export const testFirebaseConnection = async () => {
       success: true,
       message: 'Firebase 연결 성공',
       data: querySnapshot.docs.length,
-      docs: querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      docs: querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
     };
   } catch (error) {
     console.error('Firebase 연결 테스트 실패:', error);
@@ -77,7 +80,7 @@ export const testFirebaseConnection = async () => {
       success: false,
       message: error.message,
       error: error.code || 'UNKNOWN_ERROR',
-      fullError: error
+      fullError: error,
     };
   }
 };
@@ -92,14 +95,14 @@ export const simpleFirebaseTest = async () => {
     return {
       success: true,
       message: 'Firebase 기본 연결 성공',
-      collection: testCollection.id
+      collection: testCollection.id,
     };
   } catch (error) {
     console.error('간단한 Firebase 테스트 실패:', error);
     return {
       success: false,
       message: error.message,
-      error: error.code || 'UNKNOWN_ERROR'
+      error: error.code || 'UNKNOWN_ERROR',
     };
   }
 };
@@ -109,7 +112,7 @@ export const createDocument = async (collectionName, data) => {
     // Date 객체를 Timestamp로 변환하고 id 필드 제거
     const processedData = { ...data };
     delete processedData.id; // Firebase가 자동 생성한 문서 ID를 사용하도록 id 필드 제거
-    
+
     if (processedData.completedAt instanceof Date) {
       processedData.completedAt = serverTimestamp();
     }
@@ -123,7 +126,7 @@ export const createDocument = async (collectionName, data) => {
     const docRef = await addDoc(collection(db, collectionName), {
       ...processedData,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
     return docRef.id;
   } catch (error) {
@@ -152,20 +155,20 @@ export const updateDocument = async (collectionName, docId, updateData) => {
 
       await updateDoc(docRef, {
         ...processedUpdateData,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
     } else {
       // 할일의 경우 존재하지 않으면 에러를 던짐 (중복 생성 방지)
       if (collectionName === COLLECTIONS.TODOS) {
         throw new Error(`할일 ID ${docId}가 존재하지 않습니다.`);
       }
-      
+
       // 다른 컬렉션의 경우 기존 로직 유지
       console.warn(`${collectionName} 문서 ${docId}가 존재하지 않습니다. 새로 생성합니다.`);
       await setDoc(docRef, {
         ...updateData,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
     }
   } catch (error) {
@@ -189,7 +192,10 @@ export const getDocuments = async (collectionName, queryOptions = {}) => {
     let q = collection(db, collectionName);
 
     if (queryOptions.where) {
-      q = query(q, where(queryOptions.where.field, queryOptions.where.operator, queryOptions.where.value));
+      q = query(
+        q,
+        where(queryOptions.where.field, queryOptions.where.operator, queryOptions.where.value),
+      );
     }
 
     if (queryOptions.orderBy) {
@@ -201,14 +207,14 @@ export const getDocuments = async (collectionName, queryOptions = {}) => {
     }
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
+    return querySnapshot.docs.map((doc) => {
       const data = doc.data();
       // Firebase 문서 ID를 우선시하고, 데이터의 id 필드는 무시
-      return { 
-        id: doc.id,  // Firebase 문서 ID가 실제 ID
+      return {
+        id: doc.id, // Firebase 문서 ID가 실제 ID
         ...data,
         // 데이터에 id 필드가 있어도 Firebase 문서 ID로 덮어씀
-        id: doc.id
+        id: doc.id,
       };
     });
   } catch (error) {
