@@ -4,8 +4,8 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { TimerState, TimerStatus } from '../../domain/types';
-import { 
+import { TimerState, TimerStatus, ReflectionData } from '../../domain/types';
+import {
   createInitialTimerState,
   startTimer,
   pauseTimer,
@@ -15,7 +15,7 @@ import {
   completeTimer,
   syncTimerState,
   calculateTimer,
-  validateTimerState
+  validateTimerState,
 } from '../../domain/timer-logic';
 import { INotificationService } from '../../domain/repositories';
 
@@ -31,7 +31,7 @@ export interface UseTimerReturn {
     startTime: Date | null;
     task: string;
   };
-  
+
   // 순수 액션 함수들
   actions: {
     setTask: (task: string) => void;
@@ -42,11 +42,11 @@ export interface UseTimerReturn {
     reset: () => void;
     complete: (reflection: ReflectionData) => Promise<void>;
   };
-  
+
   // 유틸리티 (UI가 필요한 형태로 변환 가능)
   computed: {
     formattedTime: string;
-    progress: number;  // 0-100
+    progress: number; // 0-100
     isRunning: boolean;
     isPaused: boolean;
     isCompleted: boolean;
@@ -68,14 +68,14 @@ interface UseTimerProps {
 /**
  * 타이머 훅
  */
-export function useTimer({ 
-  notificationService, 
+export function useTimer({
+  notificationService,
   onSessionComplete,
-  initialTime = 600 
+  initialTime = 600,
 }: UseTimerProps): UseTimerReturn {
   // 타이머 상태
   const [timerState, setTimerState] = useState<TimerState>(
-    createInitialTimerState(initialTime, '')
+    createInitialTimerState(initialTime, ''),
   );
 
   // 타이머 관리
@@ -100,10 +100,10 @@ export function useTimer({
 
     const now = new Date();
     const newState = syncTimerState(timerState, now, lastActiveTimeRef.current);
-    
+
     if (newState.status !== timerState.status || newState.timeLeft !== timerState.timeLeft) {
       setTimerState(newState);
-      
+
       // 타이머 완료 시 알림
       if (newState.status === 'COMPLETED') {
         notificationService.showTimerCompletionNotification(timerState.task);
@@ -115,7 +115,7 @@ export function useTimer({
    * 작업 설정
    */
   const setTask = useCallback((task: string) => {
-    setTimerState(prev => ({ ...prev, task }));
+    setTimerState((prev) => ({ ...prev, task }));
   }, []);
 
   /**
@@ -126,7 +126,7 @@ export function useTimer({
 
     const startTime = new Date();
     const newState = startTimer(timerState, startTime);
-    
+
     setTimerState(newState);
     lastActiveTimeRef.current = startTime;
 
@@ -179,35 +179,41 @@ export function useTimer({
   /**
    * 타이머 완료 (세션 저장)
    */
-  const complete = useCallback(async (reflection: ReflectionData) => {
-    try {
-      const now = new Date();
-      const newState = completeTimer(timerState, now);
-      setTimerState(newState);
+  const complete = useCallback(
+    async (reflection: ReflectionData) => {
+      try {
+        const now = new Date();
+        const newState = completeTimer(timerState, now);
+        setTimerState(newState);
 
-      // 세션 생성 및 저장
-      if (onSessionComplete) {
-        const session = {
-          task: timerState.task,
-          startTime: timerState.startTime || now,
-          endTime: now,
-          duration: timerState.initialTime - timerState.timeLeft,
-          result: reflection.result,
-          distractions: reflection.distractions,
-          thoughts: reflection.thoughts,
-          date: now.toISOString().split('T')[0]
-        };
-        await onSessionComplete(session);
+        // 세션 생성 및 저장
+        if (onSessionComplete) {
+          const session = {
+            task: timerState.task,
+            startTime: timerState.startTime || now,
+            endTime: now,
+            duration: timerState.initialTime - timerState.timeLeft,
+            result: reflection.result,
+            distractions: reflection.distractions,
+            thoughts: reflection.thoughts,
+            date: now.toISOString().split('T')[0],
+          };
+          await onSessionComplete(session);
+        }
+
+        // 알림 표시
+        await notificationService.showTimerCompletionNotification(timerState.task);
+
+        // 세션 저장 후 타이머를 IDLE 상태로 자동 리셋
+        const resetState = resetTimer(timerState);
+        setTimerState(resetState);
+      } catch (error) {
+        console.error('타이머 완료 처리 실패:', error);
+        throw error;
       }
-
-      // 알림 표시
-      await notificationService.showTimerCompletionNotification(timerState.task);
-
-    } catch (error) {
-      console.error('타이머 완료 처리 실패:', error);
-      throw error;
-    }
-  }, [timerState, onSessionComplete, notificationService]);
+    },
+    [timerState, onSessionComplete, notificationService],
+  );
 
   /**
    * Page Visibility API 처리
@@ -244,7 +250,7 @@ export function useTimer({
         syncTimer();
       }
     }, 1000);
-    
+
     timerIntervalRef.current = syncInterval;
 
     return () => {
@@ -252,7 +258,7 @@ export function useTimer({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
-      
+
       // 모든 interval 정리
       clearAllIntervals();
     };
@@ -269,7 +275,7 @@ export function useTimer({
 
   // 계산된 값들
   const calculation = calculateTimer(timerState, new Date());
-  
+
   return {
     // 원시 상태
     state: {
@@ -277,9 +283,9 @@ export function useTimer({
       timeLeft: timerState.timeLeft,
       initialTime: timerState.initialTime,
       startTime: timerState.startTime,
-      task: timerState.task
+      task: timerState.task,
     },
-    
+
     // 액션
     actions: {
       setTask,
@@ -288,9 +294,9 @@ export function useTimer({
       resume,
       stop,
       reset,
-      complete
+      complete,
     },
-    
+
     // 계산된 값
     computed: {
       formattedTime: calculation.formattedTime,
@@ -300,7 +306,7 @@ export function useTimer({
       isCompleted: timerState.status === 'COMPLETED',
       canStart: timerState.status === 'IDLE' || timerState.status === 'PAUSED',
       canPause: timerState.status === 'RUNNING',
-      canStop: timerState.status === 'RUNNING' || timerState.status === 'PAUSED'
-    }
+      canStop: timerState.status === 'RUNNING' || timerState.status === 'PAUSED',
+    },
   };
 }

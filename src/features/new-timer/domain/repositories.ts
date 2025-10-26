@@ -94,4 +94,10 @@ export interface INotificationService {
    * @returns 권한 상태
    */
   getPermissionStatus(): string;
+
+  /**
+   * 타이머 완료 알림 표시
+   * @param taskName 작업명 (선택사항)
+   */
+  showTimerCompletionNotification(taskName?: string): Promise<void>;
 }
