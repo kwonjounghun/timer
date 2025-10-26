@@ -3,7 +3,14 @@
  * 순수 함수로만 구성된 세션 관련 비즈니스 로직
  */
 
-import { TimerSession, SessionFilter, SessionSort, SessionStats, DailyStats } from './types';
+import {
+  TimerSession,
+  SessionFilter,
+  SessionSort,
+  SessionStats,
+  DailyStats,
+  ReflectionData,
+} from './types';
 
 /**
  * 고유 ID 생성
@@ -27,10 +34,10 @@ export function createSession(
   startTime: Date,
   endTime: Date,
   reflection: ReflectionData,
-  date: string
+  date: string,
 ): TimerSession {
   const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
-  
+
   return {
     id: generateId(),
     task,
@@ -40,7 +47,7 @@ export function createSession(
     result: reflection.result,
     distractions: reflection.distractions,
     thoughts: reflection.thoughts,
-    date
+    date,
   };
 }
 
@@ -52,17 +59,17 @@ export function createSession(
  */
 export function updateSession(
   session: TimerSession,
-  updates: Partial<Omit<TimerSession, 'id'>>
+  updates: Partial<Omit<TimerSession, 'id'>>,
 ): TimerSession {
   const updatedSession = { ...session, ...updates };
-  
+
   // 시간이 변경된 경우 duration 재계산
   if (updates.startTime || updates.endTime) {
     const startTime = updates.startTime || session.startTime;
     const endTime = updates.endTime || session.endTime;
     updatedSession.duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
   }
-  
+
   return updatedSession;
 }
 
@@ -76,11 +83,9 @@ export function updateSession(
 export function updateSessionInArray(
   sessions: TimerSession[],
   id: string,
-  updates: Partial<Omit<TimerSession, 'id'>>
+  updates: Partial<Omit<TimerSession, 'id'>>,
 ): TimerSession[] {
-  return sessions.map(session => 
-    session.id === id ? updateSession(session, updates) : session
-  );
+  return sessions.map((session) => (session.id === id ? updateSession(session, updates) : session));
 }
 
 /**
@@ -90,7 +95,7 @@ export function updateSessionInArray(
  * @returns 삭제된 세션 배열
  */
 export function removeSessionFromArray(sessions: TimerSession[], id: string): TimerSession[] {
-  return sessions.filter(session => session.id !== id);
+  return sessions.filter((session) => session.id !== id);
 }
 
 /**
@@ -100,7 +105,7 @@ export function removeSessionFromArray(sessions: TimerSession[], id: string): Ti
  * @returns 필터링된 세션 배열
  */
 export function filterSessionsByDate(sessions: TimerSession[], date: string): TimerSession[] {
-  return sessions.filter(session => session.date === date);
+  return sessions.filter((session) => session.date === date);
 }
 
 /**
@@ -113,11 +118,9 @@ export function filterSessionsByDate(sessions: TimerSession[], date: string): Ti
 export function filterSessionsByDateRange(
   sessions: TimerSession[],
   startDate: string,
-  endDate: string
+  endDate: string,
 ): TimerSession[] {
-  return sessions.filter(session => 
-    session.date >= startDate && session.date <= endDate
-  );
+  return sessions.filter((session) => session.date >= startDate && session.date <= endDate);
 }
 
 /**
@@ -128,19 +131,15 @@ export function filterSessionsByDateRange(
  */
 export function filterSessions(sessions: TimerSession[], filter: SessionFilter): TimerSession[] {
   let filtered = [...sessions];
-  
+
   if (filter.date) {
     filtered = filterSessionsByDate(filtered, filter.date);
   }
-  
+
   if (filter.dateRange) {
-    filtered = filterSessionsByDateRange(
-      filtered,
-      filter.dateRange.start,
-      filter.dateRange.end
-    );
+    filtered = filterSessionsByDateRange(filtered, filter.dateRange.start, filter.dateRange.end);
   }
-  
+
   return filtered;
 }
 
@@ -152,12 +151,12 @@ export function filterSessions(sessions: TimerSession[], filter: SessionFilter):
  */
 export function sortSessionsByStartTime(
   sessions: TimerSession[],
-  direction: 'asc' | 'desc' = 'asc'
+  direction: 'asc' | 'desc' = 'asc',
 ): TimerSession[] {
   return [...sessions].sort((a, b) => {
     const aTime = a.startTime.getTime();
     const bTime = b.startTime.getTime();
-    
+
     return direction === 'asc' ? aTime - bTime : bTime - aTime;
   });
 }
@@ -170,12 +169,12 @@ export function sortSessionsByStartTime(
  */
 export function sortSessionsByEndTime(
   sessions: TimerSession[],
-  direction: 'asc' | 'desc' = 'asc'
+  direction: 'asc' | 'desc' = 'asc',
 ): TimerSession[] {
   return [...sessions].sort((a, b) => {
     const aTime = a.endTime.getTime();
     const bTime = b.endTime.getTime();
-    
+
     return direction === 'asc' ? aTime - bTime : bTime - aTime;
   });
 }
@@ -188,7 +187,7 @@ export function sortSessionsByEndTime(
  */
 export function sortSessionsByDuration(
   sessions: TimerSession[],
-  direction: 'asc' | 'desc' = 'desc'
+  direction: 'asc' | 'desc' = 'desc',
 ): TimerSession[] {
   return [...sessions].sort((a, b) => {
     return direction === 'asc' ? a.duration - b.duration : b.duration - a.duration;
@@ -224,18 +223,18 @@ export function sortSessions(sessions: TimerSession[], sort: SessionSort): Timer
 export function processSessions(
   sessions: TimerSession[],
   filter?: SessionFilter,
-  sort?: SessionSort
+  sort?: SessionSort,
 ): TimerSession[] {
   let processed = [...sessions];
-  
+
   if (filter) {
     processed = filterSessions(processed, filter);
   }
-  
+
   if (sort) {
     processed = sortSessions(processed, sort);
   }
-  
+
   return processed;
 }
 
@@ -251,27 +250,27 @@ export function calculateSessionStats(sessions: TimerSession[]): SessionStats {
       totalTime: 0,
       averageTime: 0,
       longestSession: null,
-      shortestSession: null
+      shortestSession: null,
     };
   }
-  
+
   const totalTime = sessions.reduce((sum, session) => sum + session.duration, 0);
   const averageTime = totalTime / sessions.length;
-  
-  const longestSession = sessions.reduce((longest, current) => 
-    current.duration > longest.duration ? current : longest
+
+  const longestSession = sessions.reduce((longest, current) =>
+    current.duration > longest.duration ? current : longest,
   );
-  
-  const shortestSession = sessions.reduce((shortest, current) => 
-    current.duration < shortest.duration ? current : shortest
+
+  const shortestSession = sessions.reduce((shortest, current) =>
+    current.duration < shortest.duration ? current : shortest,
   );
-  
+
   return {
     totalSessions: sessions.length,
     totalTime,
     averageTime,
     longestSession,
-    shortestSession
+    shortestSession,
   };
 }
 
@@ -283,7 +282,7 @@ export function calculateSessionStats(sessions: TimerSession[]): SessionStats {
  */
 export function calculateDailyStats(sessions: TimerSession[], date: string): DailyStats {
   const dailySessions = filterSessionsByDate(sessions, date);
-  
+
   if (dailySessions.length === 0) {
     return {
       date,
@@ -291,24 +290,24 @@ export function calculateDailyStats(sessions: TimerSession[], date: string): Dai
       totalTime: 0,
       averageTime: 0,
       firstSessionTime: null,
-      lastSessionTime: null
+      lastSessionTime: null,
     };
   }
-  
+
   const totalTime = dailySessions.reduce((sum, session) => sum + session.duration, 0);
   const averageTime = totalTime / dailySessions.length;
-  
+
   const sortedByStartTime = sortSessionsByStartTime(dailySessions, 'asc');
   const firstSession = sortedByStartTime[0];
   const lastSession = sortedByStartTime[sortedByStartTime.length - 1];
-  
+
   return {
     date,
     sessionCount: dailySessions.length,
     totalTime,
     averageTime,
     firstSessionTime: firstSession ? firstSession.startTime.toLocaleTimeString('ko-KR') : null,
-    lastSessionTime: lastSession ? lastSession.endTime.toLocaleTimeString('ko-KR') : null
+    lastSessionTime: lastSession ? lastSession.endTime.toLocaleTimeString('ko-KR') : null,
   };
 }
 
@@ -320,12 +319,15 @@ export function calculateDailyStats(sessions: TimerSession[], date: string): Dai
  */
 export function searchSessions(sessions: TimerSession[], query: string): TimerSession[] {
   if (!query.trim()) return sessions;
-  
+
   const lowercaseQuery = query.toLowerCase();
-  
-  return sessions.filter(session => 
-    session.task.toLowerCase().includes(lowercaseQuery) ||
-    session.memo.toLowerCase().includes(lowercaseQuery)
+
+  return sessions.filter(
+    (session) =>
+      session.task.toLowerCase().includes(lowercaseQuery) ||
+      session.result.toLowerCase().includes(lowercaseQuery) ||
+      session.distractions.toLowerCase().includes(lowercaseQuery) ||
+      session.thoughts.toLowerCase().includes(lowercaseQuery),
   );
 }
 
@@ -336,42 +338,42 @@ export function searchSessions(sessions: TimerSession[], query: string): TimerSe
  */
 export function validateSession(session: TimerSession): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   if (!session.id) {
     errors.push('세션 ID가 필요합니다.');
   }
-  
+
   if (!session.task.trim()) {
     errors.push('작업명이 필요합니다.');
   }
-  
+
   if (!session.startTime || isNaN(session.startTime.getTime())) {
     errors.push('유효한 시작 시간이 필요합니다.');
   }
-  
+
   if (!session.endTime || isNaN(session.endTime.getTime())) {
     errors.push('유효한 종료 시간이 필요합니다.');
   }
-  
+
   if (session.duration < 0) {
     errors.push('소요 시간은 음수가 될 수 없습니다.');
   }
-  
+
   if (session.startTime && session.endTime) {
     const start = session.startTime;
     const end = session.endTime;
-    
+
     if (start >= end) {
       errors.push('시작 시간은 종료 시간보다 빨라야 합니다.');
     }
   }
-  
+
   if (!session.date || !/^\d{4}-\d{2}-\d{2}$/.test(session.date)) {
     errors.push('유효한 날짜 형식이 필요합니다. (YYYY-MM-DD)');
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }

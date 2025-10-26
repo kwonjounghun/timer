@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { fileURLToPath, URL } from 'node:url';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -8,7 +8,7 @@ export default defineConfig({
   // base: '/timer/', // 개발 시에는 루트 경로 사용
   server: {
     port: 3000,
-    open: true
+    open: true,
   },
   resolve: {
     alias: {
@@ -17,7 +17,7 @@ export default defineConfig({
       '@/adapters': fileURLToPath(new URL('./src/adapters', import.meta.url)),
       '@/components': fileURLToPath(new URL('./src/components', import.meta.url)),
       '@/utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
-      '@/hooks': fileURLToPath(new URL('./src/hooks', import.meta.url))
-    }
-  }
-})
+      '@/hooks': fileURLToPath(new URL('./src/hooks', import.meta.url)),
+    },
+  },
+});

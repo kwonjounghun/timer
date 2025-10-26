@@ -157,7 +157,9 @@ export class FirebaseSessionRepository implements ISessionRepository {
         updateData.startTime = Timestamp.fromDate(updates.startTime);
       if (updates.endTime !== undefined) updateData.endTime = Timestamp.fromDate(updates.endTime);
       if (updates.duration !== undefined) updateData.duration = updates.duration;
-      if (updates.memo !== undefined) updateData.memo = updates.memo;
+      if (updates.result !== undefined) updateData.result = updates.result;
+      if (updates.distractions !== undefined) updateData.distractions = updates.distractions;
+      if (updates.thoughts !== undefined) updateData.thoughts = updates.thoughts;
       if (updates.date !== undefined) updateData.date = updates.date;
 
       await updateDoc(sessionRef, updateData);

@@ -16,6 +16,7 @@ import { DateSelector } from './DateSelector';
 import { SessionList } from './SessionList';
 import { TimerSession, ReflectionData } from '../../domain/types';
 import { createSession } from '../../domain/session-manager';
+import { ExportButton } from '../../../session-export/ui/ExportButton';
 
 /**
  * 미니멀 타이머 페이지 Props
@@ -28,7 +29,10 @@ interface MinimalTimerPageProps {
 /**
  * 미니멀 타이머 페이지
  */
-export function MinimalTimerPage({ sessionRepository, notificationService }: MinimalTimerPageProps) {
+export function MinimalTimerPage({
+  sessionRepository,
+  notificationService,
+}: MinimalTimerPageProps) {
   const { selectedDate, setSelectedDate } = useTimerContext();
   const [showReflection, setShowReflection] = useState(false);
 
@@ -41,17 +45,17 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
         sessionData.startTime,
         sessionData.endTime,
         sessionData,
-        sessionData.date
+        sessionData.date,
       );
       await sessions.actions.create(session);
       setShowReflection(false);
-    }
+    },
   });
 
   // 세션 훅
   const sessions = useTimerSessions({
     sessionRepository,
-    initialDate: selectedDate
+    initialDate: selectedDate,
   });
 
   // 타이머 시작 핸들러
@@ -61,14 +65,17 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
   }, [timer]);
 
   // 타이머 완료 핸들러
-  const handleComplete = useCallback(async (reflection: ReflectionData) => {
-    try {
-      await timer.actions.complete(reflection);
-      setShowReflection(false);
-    } catch (error) {
-      console.error('타이머 완료 실패:', error);
-    }
-  }, [timer]);
+  const handleComplete = useCallback(
+    async (reflection: ReflectionData) => {
+      try {
+        await timer.actions.complete(reflection);
+        setShowReflection(false);
+      } catch (error) {
+        console.error('타이머 완료 실패:', error);
+      }
+    },
+    [timer],
+  );
 
   // 타이머 리셋 핸들러
   const handleReset = useCallback(() => {
@@ -83,47 +90,54 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
   }, []);
 
   // 세션 삭제 핸들러
-  const handleDeleteSession = useCallback(async (id: string) => {
-    try {
-      await sessions.actions.delete(id);
-    } catch (error) {
-      console.error('세션 삭제 실패:', error);
-    }
-  }, [sessions]);
+  const handleDeleteSession = useCallback(
+    async (id: string) => {
+      try {
+        await sessions.actions.delete(id);
+      } catch (error) {
+        console.error('세션 삭제 실패:', error);
+      }
+    },
+    [sessions],
+  );
 
   // 현재 날짜의 세션들
   const currentDateSessions = sessions.computed.byDate(selectedDate);
   const sortedSessions = sessions.computed.sortedByTime(currentDateSessions);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className='min-h-screen bg-gray-50'>
       {/* 헤더 */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+      <div className='bg-white border-b border-gray-200 px-6 py-4'>
+        <div className='max-w-4xl mx-auto flex justify-between items-center'>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">10분 집중 타이머</h1>
-            <p className="text-gray-600">한 번에 하나의 작업에 집중하세요</p>
+            <h1 className='text-2xl font-bold text-gray-800'>10분 집중 타이머</h1>
+            <p className='text-gray-600'>한 번에 하나의 작업에 집중하세요</p>
           </div>
           <Link
-            to="/"
-            className="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            to='/'
+            className='bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors'
           >
             ← 홈으로
           </Link>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* 날짜 선택 */}
-        <DateSelector
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-        />
+      <div className='max-w-4xl mx-auto px-6 py-8'>
+        {/* 날짜 선택 및 노션 동기화 */}
+        <div className='flex items-center justify-between mb-4'>
+          <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
+          <ExportButton
+            sessions={sortedSessions}
+            date={selectedDate}
+            onSuccess={() => console.log('마크다운 내보내기 완료')}
+          />
+        </div>
 
         {/* 타이머 섹션 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8'>
           {/* 타이머 디스플레이 */}
-          <div className="mb-8">
+          <div className='mb-8'>
             <TimerDisplay
               time={timer.computed.formattedTime}
               task={timer.state.task}
@@ -133,7 +147,7 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
 
           {/* 작업 입력 (IDLE 상태일 때만) */}
           {timer.state.status === 'IDLE' && (
-            <div className="mb-6">
+            <div className='mb-6'>
               <TaskInput
                 value={timer.state.task}
                 onChange={timer.actions.setTask}
@@ -142,7 +156,7 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
               <button
                 onClick={handleStart}
                 disabled={!timer.state.task.trim()}
-                className="mt-4 w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                className='mt-4 w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors'
               >
                 시작하기
               </button>
@@ -151,7 +165,7 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
 
           {/* 타이머 컨트롤 */}
           {timer.state.status !== 'IDLE' && (
-            <div className="mb-6">
+            <div className='mb-6'>
               <TimerControls
                 status={timer.state.status}
                 canStart={timer.computed.canStart}
@@ -170,7 +184,7 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
 
           {/* 회고 폼 */}
           {showReflection && (
-            <div className="mb-6">
+            <div className='mb-6'>
               <ReflectionForm
                 task={timer.state.task}
                 onSave={handleComplete}
@@ -181,17 +195,17 @@ export function MinimalTimerPage({ sessionRepository, notificationService }: Min
         </div>
 
         {/* 세션 히스토리 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+          <h2 className='text-lg font-semibold text-gray-800 mb-4'>
             완료된 세션 ({sortedSessions.length}개)
           </h2>
-          
+
           <SessionList
             sessions={sortedSessions}
             onEdit={handleEditSession}
             onDelete={handleDeleteSession}
             loading={sessions.loading}
-            emptyMessage="이 날짜에는 완료된 세션이 없습니다."
+            emptyMessage='이 날짜에는 완료된 세션이 없습니다.'
           />
         </div>
       </div>
