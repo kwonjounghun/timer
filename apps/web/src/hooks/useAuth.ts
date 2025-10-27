@@ -1,7 +1,6 @@
 import {
-  getRedirectResult,
   onAuthStateChanged,
-  signInWithRedirect,
+  signInWithPopup,
   signOut,
   User,
 } from 'firebase/auth';
@@ -62,19 +61,26 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, []);
 
-  // 구글 로그인 (리디렉션 방식 사용)
+  // 구글 로그인 (팝업 방식 사용 - 리다이렉트 URL 문제 해결)
   const signInWithGoogle = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      // 리디렉션 방식으로 로그인 시작 (팝업 대신)
-      await signInWithRedirect(auth, googleProvider);
-      // 리디렉션 후에는 페이지가 다시 로드되므로 여기서는 사용자 상태를 설정하지 않음
+      
+      // 팝업 방식으로 로그인 (리다이렉트 URL 문제 없음)
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log('팝업 로그인 성공:', result.user);
+      
+      // 사용자 권한 확인
+      const authorizedUser = await checkUserAuthorization(result.user);
+      setUser(authorizedUser);
+      
     } catch (error) {
       console.error('구글 로그인 실패:', error);
-      setLoading(false);
       throw error;
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [checkUserAuthorization]);
 
   // 로그아웃
   const logout = useCallback(async (): Promise<void> => {
@@ -87,24 +93,8 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, []);
 
-  // 리디렉션 결과 처리 및 인증 상태 변경 감지
+  // 인증 상태 변경 감지
   useEffect(() => {
-    // 리디렉션 결과 처리
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          console.log('리디렉션 로그인 성공:', result.user);
-          const authorizedUser = await checkUserAuthorization(result.user);
-          setUser(authorizedUser);
-        }
-      } catch (error) {
-        console.error('리디렉션 결과 처리 실패:', error);
-      }
-    };
-
-    handleRedirectResult();
-
     // 인증 상태 변경 감지
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {

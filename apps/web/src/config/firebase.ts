@@ -39,6 +39,13 @@ try {
     prompt: 'select_account'
   });
 
+  // 프로덕션 환경에서 리다이렉트 URL 설정
+  if (import.meta.env.PROD) {
+    // 프로덕션 환경에서는 /timer/login으로 리다이렉트
+    googleProvider.addScope('email');
+    googleProvider.addScope('profile');
+  }
+
   console.log('Firebase 초기화 성공');
 } catch (error) {
   console.error('Firebase 초기화 실패:', error);
