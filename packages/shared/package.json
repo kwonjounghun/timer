@@ -1,0 +1,22 @@
+{
+  "name": "@timer/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./features/*": "./dist/features/*/index.js",
+    "./utils/*": "./dist/utils/*/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "es-toolkit": "^1.41.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}
