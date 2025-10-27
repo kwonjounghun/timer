@@ -52,6 +52,13 @@ export function MinimalTimerPage({
     },
   });
 
+  // 타이머 상태 변경 감지 - 완료 시 회고 화면 표시
+  React.useEffect(() => {
+    if (timer.state.status === 'COMPLETED') {
+      setShowReflection(true);
+    }
+  }, [timer.state.status]);
+
   // 세션 훅
   const sessions = useTimerSessions({
     sessionRepository,
