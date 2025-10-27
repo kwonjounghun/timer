@@ -13,12 +13,12 @@ import { SessionGroup } from './types';
  * @returns 작업별로 그룹화된 세션 목록
  */
 export function groupSessionsByTask(sessions: TimerSession[]): SessionGroup[] {
-  const grouped = groupBy(sessions, (session) => session.task);
+  const grouped = groupBy(sessions, (session: TimerSession) => session.task);
 
   return Object.entries(grouped).map(([task, sessions]) => ({
     task,
-    sessions,
-    totalDuration: sumBy(sessions, (s) => s.duration),
+    sessions: sessions as TimerSession[],
+    totalDuration: sumBy(sessions as TimerSession[], (s: TimerSession) => s.duration),
     count: sessions.length,
   }));
 }
@@ -29,7 +29,7 @@ export function groupSessionsByTask(sessions: TimerSession[]): SessionGroup[] {
  * @returns 총 작업 시간 (초)
  */
 export function calculateTotalDuration(sessions: TimerSession[]): number {
-  return sumBy(sessions, (s) => s.duration);
+  return sumBy(sessions, (s: TimerSession) => s.duration);
 }
 
 /**
